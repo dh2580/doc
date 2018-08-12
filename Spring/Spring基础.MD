@@ -22,7 +22,7 @@ Spring框架基础
 >+ `@Component`（组件，没有明确的角色）
 >+ `@Service` （在业务逻辑层，即**service** 层使用）
 >+ `@Repository`（在数据访问层，即**dao** 层使用）
->+ `Controller`(在展示层，即 `MVC` -> `Spring-MVC` 层使用)
+>+ `@Controller`(在展示层，即 `MVC` -> `Spring-MVC` 层使用)
 
 
 ## 4、注入 `Bean` 的常用注解
