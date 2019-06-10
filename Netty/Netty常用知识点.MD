@@ -34,6 +34,15 @@
 
 
 #### 8、Netty跟Java NIO有什么不同，为什么不直接使用JDK NIO类库
++ 相比`JDK`原生的`NIO`库API，使用`Netty`操作实现起来更为简洁，以及通过`ChannelPipeline`上添加`ChannelHandler`可以很轻松对数据报文进行处理
+
++ 对于网络闪断、半包读写、异常码流等问题，Netty都有比较成熟的解决方案
+
++ 针对内存管理，`Netty`提供了内存池来复用内存，避免了`ByteBuf`的重复创建与回收
+
++ 针对`JDK7`以前版本，包括`JDK7`存在`epoll`空轮询`Bug`，`Netty`中做了对应的解决容错处理
+
++ `Netty`中对于原生`JDK NIO`中的一些组件做了优化，比如`ByteBuf`在使用时，就不需要像原生JDK NIO中那样执行`flip()`、`rewind()`操作
 
 #### 9、Netty组件有哪些，分别有什么关联
 
