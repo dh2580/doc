@@ -44,7 +44,11 @@
 
 
 #### 7、select、poll、epoll的机制及其区别
++ `select` 通过将应用进程逐个添加到需要监视的`socket fd`的等待队列上，当监视的`socket fd`有一个或者多个有数据就绪时，通过中断程序唤醒应用进程，将应用进程从所有的等待队列中移除，应用进程遍历其监视的`socket fd`列表，得到就绪的`socket`集合
 
++ `poll` 原理与`select`很相似，但是`socket fd` 集合的数据结果采用了链式结构，没有最大连接数的限制，但同样存在轮询性能问题
+
++ `epoll` 通过引入`eventpoll`对象，将`eventpoll`对象添加到所有需要监视的`socket fd` 的等待队列中，同时将应用进程添加到`eventpoll`对象的等待队列中，当监视的`socket fd`有就绪数据时，将该`socket fd`添加到`eventpoll`对象的就绪列表中，唤醒`eventpoll`对象的等待队列中的应用进程，唤醒后的应用进程通过只读取就绪列表就可获取就绪的`socket fd`。其中，`eventpoll`中的就绪列表采用了双向链表结构，对于管理监视的`socket fd`集合则采用了红黑树结构。
 
 #### 8、Netty跟Java NIO有什么不同，为什么不直接使用JDK NIO类库
 + 相比`JDK`原生的`NIO`库API，使用`Netty`操作实现起来更为简洁，以及通过`ChannelPipeline`上添加`ChannelHandler`可以很轻松对数据报文进行处理
