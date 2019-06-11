@@ -93,4 +93,4 @@
 + 对于每个Page的内部，由多个SubPage组成，每个SubPage大小都是相同的，但是SubPage的大小取决于第一次在该Page内申请的内存大小。如果Page大小为8K，第一在Page内申请内存大小为1K，则自此以后该Page只能分配1K大小的内存，超过1K则需在新的Page中分配。
 
 #### 14、Netty的对象池是怎么实现的
-+ 
++ 利用`Stack`对象存储回收的对象，以及获取对象，回收和获取分别对应于`push()`、`pop()`操作。`Stack`对象包含了一个本地的对象数组，和一个`WeakOrderQueue`对象组成的链表，其中本地对象数组存储了本线程回收的对象，`WeakOrderQueue`链表中的每一个节点存储了其他的一个线程回收到该`Stack`中的对象。当取对象时，优先从本地对象数组中取，如果本地对象数组中取不到对象，则从`WeakOrderQueue`链表中优先获取head `WeakOrderQueue`的head `Linke`中的全部对象，置换到本地对象数组。(每个`WeakOrderQueue`都对应着一个`Link`类型的链表 ，每个`Link`节点都包含一个对象数组，用于本地对象数组为空时，从`WeakOrderQueue`中获取置换使用。其中，`Link`中的对象数组长度和`Stack`对象中的本地对象数组长度相同)
