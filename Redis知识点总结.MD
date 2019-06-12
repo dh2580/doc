@@ -408,7 +408,7 @@ Redis 知识点总结
 
 4、`volatile-random`
 
-随机删除过期的`key`，直至腾出足够的空间为止
+随机删除设置了超时属性的`key`，直至腾出足够的空间为止
 
 5、`allkeys-random`
 
