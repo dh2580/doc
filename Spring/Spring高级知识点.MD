@@ -19,4 +19,14 @@
 #### 4、`Spring Bean`生命周期
 ![SpringBean生命周期](SpringBean生命周期.jpeg)
 
+#### 5、`Spring`事件机制中异步处理、同步处理问题
 
+#### 6、`SpringBoot`自动装配的实现原理
+
+#### 7、`Spring5`新特性有哪些
++ 只能运行在`JDK8`以上的环境中
++ 通过`WebFlux`模块支持响应式编程
++ 支持HTTP2.0
++ 提供了对`Kotlin`语言的支持
++ 测试套件中增加了对`JUnit5`的支持，`Spring5`中可以在单元测试中使用`JDK8`提供的函数编程特性
++ 中止了部分过时`API`的支持，比如`Hibernate3`、`Hibernate4`以及`XMLBeans`、`Guava Cache`（Spring5中放弃Guava Cache改用Caffeine作为本地Cache组件）
