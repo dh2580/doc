@@ -84,7 +84,7 @@
 
 + 节点类型：**持久化节点**、**持久化顺序节点**、**临时节点**、**临时顺序节点**
 
-+ 单个节点包含：**节点数据data**、**节点ACL信息**（create—创建子节点权限、read—读取节点数据和子节点列表权限、write—更新节点数据权限、delete—删除子节点权限、admin—设置节点ACL权限）、**节点版本信息Stat**（version—当前节点版本、cversion—当前节点子节点版本、aversion—当前节点ACL版本）
++ 单个节点包含：**节点数据data**、**节点ACL信息**（create—创建子节点权限、read—读取节点数据和子节点列表权限、write—更新节点数据权限、delete—删除子节点权限、admin—设置节点ACL权限）、**节点版本信息Stat**（version—当前节点版本、cversion—当前节点子节点版本、aversion—当前节点ACL版本）、**子节点列表**（指向其各个子节点的指针）
 
 + Zookeeper在运行时会在内存中维护一个完整的数据，就像内存数据库一样。Zookeeper的内存数据库叫做`ZKDatabase`，负载管理Zookeeper的会话、存储和事务日志。它会定期dump一份数据快照到硬盘上，在Zookeeper启动时根据这个快照数据和事务日志来加载一份完整的数据到内存
 
