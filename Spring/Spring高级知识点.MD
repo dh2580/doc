@@ -20,8 +20,18 @@
 ![SpringBean生命周期](SpringBean生命周期.jpeg)
 
 #### 5、`Spring`事件机制中异步处理、同步处理问题
++ `Spring`事件处理分为两种：**同步处理**、**异步处理**，其中**异步处理**分为**发布者异步发布**、**监听者异步处理**
+
++ **同步处理**：发布者发布和监听者处理在同一个线程内，可保证事务处理的安全性
+
++ **发布者异步发布**：通过为`SimpleApplicationEventMulticaster`组件设置`taskExecutor`属性，在发布事件时，会将事件发布包装成一个`task`，提交给`taskExecutor`执行
+
++ **监听者异步处理**：发布者采用同步发布，监听者在事件处理方法上加上`@Async`注解，当进行事件发布到监听者时，会存在一个AOP拦截组件：`AnnotationAsyncExecutionInterceptor`，该拦截器会将监听器处理事件流程包装成一个`task`，通过内部的线程池执行
+
++ 事件处理如需异步处理，建议采用监听者异步处理方式，因为那样子可以做到通过是否在处理方法上添加`@Async`决定是否进行异步处理。对于同步处理的监听器来说，仍然可以保持事务的安全性，对于不要求事务安全性的处理采用异步处理，即部分同步处理、部分异步处理
 
 #### 6、`SpringBoot`自动装配的实现原理
++ 当`SpringBoot`启动时，会检查类路径下各个`jar`包中的`META-INF`下的`spring.factories`文件，如果存在该文件，则从该文件中查找配置`org.springframework.boot.autoconfigure.EnableAutoConfiguration`指向的自动配置类，然后加载该类，自动配置类往往用`@Configuration`装饰，表示其是一个Java类型的配置类，并且其自身，以及其包含的`Bean`正常情况下都会采用`@Condition`装饰，即采用条件装配，这就为什么在引入相关的`starter`依赖包后，会自动创建一些`Bean`
 
 #### 7、`Spring5`新特性有哪些
 + 只能运行在`JDK8`以上的环境中
