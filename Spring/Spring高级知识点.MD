@@ -33,10 +33,10 @@
 #### 6、`@AutoWire`自动装配原理
 + 在Bean实例化后，未装配属性前（通过`<property>`标签装配），会被当前`Bean`容器中的所有`InstantiationAwareBeanPostProcessor`类型的BeanProcessor过滤处理，`AutowiredAnnotationBeanPostProcessor`就是`InstantiationAwareBeanPostProcessor`接口的间接实现子类。在`AutowiredAnnotationBeanPostProcessor`中，通过对当前Bean的`BeanDefinition`判断是否有被`AutoWire`修饰的属性，如果有则优先装配该属性类型的Bean，然后注入到该Bean。
 
-#### 6、`SpringBoot`自动装配的实现原理
+#### 7、`SpringBoot`自动装配的实现原理
 + 当`SpringBoot`启动时，会检查类路径下各个`jar`包中的`META-INF`下的`spring.factories`文件，如果存在该文件，则从该文件中查找配置`org.springframework.boot.autoconfigure.EnableAutoConfiguration`指向的自动配置类，然后加载该类，自动配置类往往用`@Configuration`装饰，表示其是一个Java类型的配置类，并且其自身，以及其包含的`Bean`正常情况下都会采用`@Condition`装饰，即采用条件装配，这就为什么在引入相关的`starter`依赖包后，会自动创建一些`Bean`
 
-#### 7、`Spring5`新特性有哪些
+#### 8、`Spring5`新特性有哪些
 + 只能运行在`JDK8`以上的环境中
 + 通过`WebFlux`模块支持响应式编程
 + 支持HTTP2.0
