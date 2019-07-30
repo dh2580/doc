@@ -55,7 +55,7 @@
 
 + 对于网络闪断、半包读写、异常码流等问题，Netty都有比较成熟的解决方案
 
-+ 针对内存管理，`Netty`提供了内存池来复用内存，避免了`ByteBuf`的重复创建与回收
++ 针对内存管理，`Netty`提供了内存池来复用内存，减少了向系统申请/释放内存的时间消耗，以及通过对象池避免了`ByteBuf`等对象的重复创建与回收
 
 + 针对`JDK7`以前版本，包括`JDK7`存在`epoll`空轮询`Bug`，`Netty`中做了对应的解决容错处理（当空轮询超过一定的阈值时，默认是512次，可通过设置`io.netty.selectorAutoRebuildThreshold`参数改变，重新创建一个新的`Select`组件，置换掉原有的`Select`组件）
 
@@ -85,7 +85,7 @@
 
 + 通过ByteBuf的`wrap`操作，可以将`byte[]数组`、`ByteBuf`、`ByteBuffer`包装成一个`Netty ByteBuf`对象，避免了拷贝操作
 
-+ ByteBuf还支持`slice`操作，可以ByteBuf分解为多个共享同一存储的ByteBuf，避免了内存拷贝
++ ByteBuf还支持`slice`操作，可以ByteBuf分解为多个共享同一存储的ByteBuf，避免了内存拷贝，类似于`ArrayList`的`subList(...)`方法
 
 #### 13、Netty的内存池实现原理
 + Netty内存由多个内存区域组成，每个内存区域由多个Chunk（块）组成，每个Chunk又由多个Page（页）组成，每个Page由多个SubPage（子页）组成。
@@ -93,6 +93,6 @@
 + 对于每个Page的内部，由多个SubPage组成，每个SubPage大小都是相同的，但是SubPage的大小取决于第一次在该Page内申请的内存大小。如果Page大小为8K，第一在Page内申请内存大小为1K，则自此以后该Page只能分配1K大小的内存，超过1K则需在新的Page中分配。
 
 #### 14、Netty的对象池是怎么实现的
-+ 将每一个缓存的对象包装成为一个`DefaultHandle`类对象，利用`Stack`对象存储回收的对象，以及获取对象，回收和获取分别对应于`push()`、`pop()`操作。`Stack`对象包含了一个本地的对象数组，和一个`WeakOrderQueue`对象组成的链表，其中本地对象数组存储了本线程回收的对象，`WeakOrderQueue`链表中的每一个节点存储了其他的一个线程回收到该`Stack`中的对象。当取对象时，优先从本地对象数组中取，如果本地对象数组中取不到对象，则从`WeakOrderQueue`链表中优先获取head `WeakOrderQueue`的head `Linke`中的全部对象，置换到本地对象数组。(每个`WeakOrderQueue`都对应着一个`Link`类型的链表 ，每个`Link`节点都包含一个对象数组，用于本地对象数组为空时，从`WeakOrderQueue`中获取置换使用。其中，`Link`中的对象数组长度和`Stack`对象中的本地对象数组长度相同)。
++ 将每一个缓存的对象包装成为一个`DefaultHandle`类对象，利用`Stack`对象存储回收的对象，以及获取对象，回收和获取分别对应于`push()`、`pop()`操作。`Stack`对象包含了一个本地的对象数组，和一个`WeakOrderQueue`对象组成的链表，其中本地对象数组存储了本线程回收的对象，`WeakOrderQueue`链表中的每一个节点存储了其他的一个线程回收到该`Stack`中的对象。当取对象时，优先从本地对象数组中取，如果本地对象数组中取不到对象，则从`WeakOrderQueue`链表中优先获取head `WeakOrderQueue`的head `Link`中的全部对象，置换到本地对象数组。(每个`WeakOrderQueue`都对应着一个`Link`类型的链表 ，每个`Link`节点都包含一个对象数组，用于本地对象数组为空时，从`WeakOrderQueue`中获取置换使用。其中，`Link`中的对象数组长度和`Stack`对象中的本地对象数组长度相同)。
 
 + 缓存的对象大多数是`ByteBuffer`对象，比如`PooledHeapByteBuf`、`PooledDirectByteBuf`
