@@ -237,7 +237,7 @@ private int expungeStaleEntry(int staleSlot) {
 ````
 代码很长有些难懂，简单来说，这个操作就是对单个位置上的过期元素进行驱逐，以及对排在其后面的元素进重新计算下标位置的过程，至于为什么需要对排在其后面的元素重新计算下标位置，是因为存放时如果发生了哈希碰撞，会按照线性探测法往后排放，现在前面位置的元素被驱逐掉了，后面的元素理应重新计算位置，往前排。在深入一点思考，为什么不是直接把后面的元素往前移动一位，而是重新计算下标位置呢，这一点是因为后面的元素不一定是和因为和过期元素发生哈希碰撞导致的往后排，也有可能是和排在过期元素后面的其他元素发生哈希碰撞而导致的后排，所以采用重新计算下标位置是最正确的处理方式。
 
-除了对特定位置的元素进行驱逐，还有全局驱逐，源码（`java.lang.ThreadLocal.ThreadLocalMap#expungeStaleEntries()`）如下，其实就是对单个位置元素进行逐个驱逐，就不在具体分析了
+除了对特定位置的元素进行驱逐，还有全局驱逐，源码（`java.lang.ThreadLocal.ThreadLocalMap#expungeStaleEntries()`）如下，其实就是对每个位置上的元素进行逐个驱逐，就不在具体分析了
 ```java
 private void expungeStaleEntries() {
     Entry[] tab = table;
