@@ -1,5 +1,5 @@
 ## Java多线程之`synchronized`
-多线程环境下，涉及到对于临界区代码的并发访问，有多种同步方位策略，其中`synchronized`作为最原始的一种同步访问策略存在已久。相比于`API`层面的`Lock`锁，`synchronized`是基于指令的语义层面的一种同步机制，通过在字节码中插入`monitorenter`、`monitorenter`指令来实现，相关使用以及具体实现会在下面阐述。
+多线程环境下，涉及到对于临界区代码的并发访问，有多种同步策略，其中`synchronized`作为最原始的一种同步访问策略存在已久。相比于`API`层面的`Lock`锁，`synchronized`是基于指令的语义层面的一种同步机制，通过在字节码中插入`monitorenter`、`monitorenter`指令来实现，相关使用以及具体实现会在下面阐述。
 #### `synchronized` 三种使用场景
 + 锁定对象，对一个对象进行加锁
 ```java
@@ -248,7 +248,7 @@ ObjectMonitor() {
 锁状态|25`bit`|4`bit`|1`bit`（是否偏向）|2`bit`（锁标志）
 -|-|-|-|-
 无锁状态|对象的`HashCode`|对象分代年龄|0|01
-偏向锁|线程ID + `epoch`|对象分带年龄|1|01
+偏向锁|线程ID + `epoch`|对象分代年龄|1|01
 
 ***
 
