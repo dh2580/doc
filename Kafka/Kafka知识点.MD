@@ -53,9 +53,11 @@ kafkaProducer.close();
 ```java
 //配置失败重试次数为3
 properties.put(ProducerConfig.RETRIES_CONFIG, 3);
+//配置失败重试时间间隔为100ms
+properties.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 100);
 ```
 
-#### 4、分区器
+#### 4、`Partitioner`（分区器）
 + 在消息发送到`Broker`之前，需要在发送端计算出要发送的`target partition`（目标分区），如果`ProducerRecord`中指定了`partition`，则发送到`partition`指向的分区
 
 + 如果`ProducerRecord`未指定`partition`，在默认的分区器(`DefaultPartitioner`)中，如果`key`为`null`，则会以轮询的方式发送到主题的**可用分区**；如果`key`不为`null`，则会对`key`采用`MurmurHash2`算法计算哈希值，然后对**所有分区**进行取模运算，得到目标分区。
@@ -73,12 +75,12 @@ public interface Partitioner extends Configurable, Closeable {
 
     public void close();
 }
-````
+```
 
 注册到`KafkaProducer`如下所示
 ```java
 properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, MyCustomPartitioner.class.getName());
-````
+```
 
 #### 5、`ProducerInterceptor`（生产者拦截器）
 + `ProducerInterceptor`用于在消息发送之前、消息发送成功API返回应答之前或者消息发送失败时进行拦截。具体接口定义如下所示
@@ -100,15 +102,23 @@ public interface ProducerInterceptor<K, V> extends Configurable {
 ```java
 //如有多个拦截器，可采用逗号进行分割
 properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, MyCustomProducerInterceptor.class.getName());
-````
+```
 
 *`onSend(..)`是在用户线程中执行的，`onAcknowledgement(..)`是在`I/O`线程中执行的，尽量不要在`onAcknowledgement(..)`中执行过多的操作*
 
 ![kafka发送端处理流程](kafka发送端处理流程1.jpg)
 
-#### 消息发送过程
-`Interceptor`（生产者拦截器） -> `Serializer`（序列化器） -> `Partitioner`（分区器）
+#### 6、`kafka`发送端线程模型
+![kafka发送端线程模型](kafka发送端线程模型1.jpg)
 
-+ `Serializer`需要实现`org.apache.kafka.common.serialization.Serializer<T>`接口
++ 消息在发送出去之前，会先暂存在一个叫做消息累加器（`RecordAccumulator`）的组件中存放，多个消息组成一个`ProducerBatch`对象，每个`ProducerBatch`的默认大小为16KB，可通过设置参数`batch.size`来修改
 
-+ `Partitioner`需要实现`org.apache.kafka.clients.producer.Partitioner`接口
++ 消息累加器（`RecordAccumulator`）的总容量大小默认为32MB，可以通过设置参数`buffer.memory`来修改
+
++ 如果消息累加器的容量大小达到设定大小，后续再发送新的消息，业务线程将会阻塞直至超时或者有空间可用，超时时间配置`max.block.ms`，默认值为60S
+
++ 在`InFlightRequests`内部，每个`Node`节点都有一个对应的列表用于存放已经发出，但还未收到`Broker`响应的请求，每个`Node`节点的存放请求队列的长度可以通过设置参数`max.in.flight.requests`来修改，默认是5个。
+
++ 如果某个`Node`节点对应的存放请求队列长度超过设定大小，`Sender`线程将不会再向该`Node`节点发送消息，直至该节点对应的存放请求队列有空间可用
+
+#### 7、
