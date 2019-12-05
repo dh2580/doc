@@ -102,7 +102,7 @@ public interface ProducerInterceptor<K, V> extends Configurable {
 properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, MyCustomProducerInterceptor.class.getName());
 ````
 
-*`onSend(..)`是在用户线程中执行的，`onAcknowledgement(..)`是在`I/O`线程中执行的，尽量不要再`onAcknowledgement(..)`中执行过多的操作*
+*`onSend(..)`是在用户线程中执行的，`onAcknowledgement(..)`是在`I/O`线程中执行的，尽量不要在`onAcknowledgement(..)`中执行过多的操作*
 
 ![kafka发送端处理流程](kafka发送端处理流程1.jpg)
 
