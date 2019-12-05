@@ -121,4 +121,26 @@ properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, MyCustomProducerInterc
 
 + 如果某个`Node`节点对应的存放请求队列长度超过设定大小，`Sender`线程将不会再向该`Node`节点发送消息，直至该节点对应的存放请求队列有空间可用
 
-#### 7、
+#### 7、消息可靠写入实现
+为了确保一个消息发送到`Broker`，可以通过设置参数`acks`来指定目标分区必须有多少个副本写入成功才算是发送成功，配置如下：
+```java
+//默认1，只要分区的leader副本写入成功，就算写入成功
+properties.put(ProducerConfig.ACKS_CONFIG, "1");
+
+//只要发送出去，就认为写入成功
+properties.put(ProducerConfig.ACKS_CONFIG, "0");
+
+//分区 ISR 中所有的副本都写入成功，才算是写入成功
+properties.put(ProducerConfig.ACKS_CONFIG, "-1");
+```
+*如果发送失败，可以通过重试机制来提高可靠性*
+
+#### 8、发送消息最大限制
+默认每一条发送的消息最大位1MB，可通过设置参数`max.request.size`来修改，如下
+```java
+//修改最大位3M
+properties.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 3 * 1024 * 1024);
+```
+*该参数和`Broker`端的`message.max.bytes`参数相对应，需要确保`Producer`端的`max.request.size`参数值不大于`Broker`端的`message.max.bytes`参数值*
+
+#### 9、
