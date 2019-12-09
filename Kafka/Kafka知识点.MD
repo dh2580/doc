@@ -16,7 +16,7 @@
 Properties properties = new Properties();
 //设置broker节点，多节点可以采用逗号分隔，不需要把全部的broker节点都填上
 properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
-//生产者标示ID
+//生产者标示ID，可选
 properties.put(ProducerConfig.CLIENT_ID_CONFIG, "producer-1");
 //消息Key序列化类
 properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -122,7 +122,7 @@ properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, MyCustomProducerInterc
 + 如果某个`Node`节点对应的存放请求队列长度超过设定大小，`Sender`线程将不会再向该`Node`节点发送消息，直至该节点对应的存放请求队列有空间可用
 
 #### 7、消息可靠写入实现
-为了确保一个消息发送到`Broker`，可以通过设置参数`acks`来指定目标分区必须有多少个副本写入成功才算是发送成功，配置如下：
+为了确保消息发送到`Broker`集群，并且不丢失，可以通过设置参数`acks`来指定目标分区必须有多少个副本写入成功才算是发送成功，配置如下：
 ```java
 //默认1，只要分区的leader副本写入成功，就算写入成功
 properties.put(ProducerConfig.ACKS_CONFIG, "1");
@@ -143,4 +143,83 @@ properties.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 3 * 1024 * 1024);
 ```
 *该参数和`Broker`端的`message.max.bytes`参数相对应，需要确保`Producer`端的`max.request.size`参数值不大于`Broker`端的`message.max.bytes`参数值*
 
-#### 9、
+#### 9、消费者、消费组与分区分配
+![kafka消费者、消费组与分区分配](./kafka消费者、消费组与分区分配.jpg)
+
++ 在`Consumer`订阅`Topic`时，是以`Consumer Group`的形式来进行订阅的，每个`Consumer`必定属于某个`Consumer Group`
+
++ 在单个`Consumer Group`内，进行分区分配时，一个分区最多只能分配给一个`Consumer`，不能分配给多个`Consumer`。由此可见，当单个`Consumer Group`内的`Consumer`数量超过分区数量时，会出现部分`Consumer`分配不到分区，如上图中 `Consumer Group2` 中的`C4`
+
+#### 10、`kafka`消费者消费示例
+```java
+boolean isStop = false;
+
+Properties properties = new Properties();
+//设置broker节点，多节点可以采用逗号分隔，不需要把全部的broker节点都填上
+properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
+
+//设置消费者组
+properties.put(ConsumerConfig.GROUP_ID_CONFIG, "consumer-group1");
+//设置消费者标识ID，可选
+properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "consumer-group1-c1");
+
+//设置Key反序列化类
+properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+//设置Value反序列化类
+properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<String, String>(properties);
+
+//订阅主题
+kafkaConsumer.subscribe(Arrays.asList("topic1"));
+
+while (!isStop) {
+    //拉取消息
+    ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(1));
+
+    //消费消息
+    for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
+        //获取主题
+        System.out.println("topic -> " + consumerRecord.topic());
+        //获取消息所在分区
+        System.out.println("partition -> " + consumerRecord.partition());
+        //获取消息在分区内偏移Offset
+        System.out.println("offset -> " + consumerRecord.offset());
+        //获取消息Key
+        System.out.println("key -> " + consumerRecord.key());
+        //获取消息Value
+        System.out.println("value -> " + consumerRecord.value());
+    }
+}
+
+kafkaConsumer.close();
+```
+*`KafkaConsumer`不是线程安全的，不能在多线程环境下使用*
+
+*`Consuner Group`可以订阅多个`Topic`*
+
+#### 11、`kafka`消费组订阅
++ 直接订阅
+```java
+//该方式直接订阅主题，如果多次订阅，则以最后一次订阅为准
+kafkaConsumer.subscribe(Arrays.asList("topic1", "topic2"));
+```
+
++ 匹配订阅
+```java
+//通过正则表达式进行匹配、订阅主题，后续有匹配正则表达式的新主题创建时，消费组可拉取新主题的消息进行消费
+ kafkaConsumer.subscribe(Pattern.compile("topic*"));
+```
+
++ 订阅特定分区
+```java
+//订阅主题 topic1 中的 0、1 分区，topic2 中的 0 分区
+kafkaConsumer.assign(Arrays.asList(
+    new TopicPartition("topic1", 0), 
+    new TopicPartition("topic1", 1), 
+    new TopicPartition("topic2", 0))
+);
+```
+*上述三种订阅，只能选择一种方式进行订阅，即三选一，不能多种订阅同时存在*
+
+#### 12、
