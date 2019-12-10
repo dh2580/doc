@@ -222,4 +222,65 @@ kafkaConsumer.assign(Arrays.asList(
 ```
 *上述三种订阅，只能选择一种方式进行订阅，即三选一，不能多种订阅同时存在*
 
-#### 12、
+#### 12、`ConsumerRecords<String, String>`内部结构
+![kafka之ConsumerRecords内部结构](./kafka之ConsumerRecords内部结构.jpg)
+
+#### 13、`kafka`消费者提交位移
+假设消费情况如下图所示
+
+![kafka消费者提交位移](./kafka消费者提交位移.jpg)
+
+#### 自动提交位移（默认提交方式）
++ 默认采用自动提交，需要确保消费者端参数配置如下（即默认配置）
+```java
+//开启自动提交，默认开启
+properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+//设置自动提交时间间隔为5000ms
+properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 5000);
+```
++ **存在重复消费场景**：拉取到一批消息，消费到一半，在并未到自动提交时间时，消费者崩溃，下次拉取将会从上一次提交位置重新拉取
+
++ **存在消息丢失场景**：拉取到一批消息存入本地缓存队列中，由其他线程进行消费。在其他线程正在消费消息时，由于到了自动提交时间，过早的进行位移提交后，消费者崩溃，下次拉取将从奔溃前提交的位移位置开始拉取
+
+#### 手动同步提交
++ 需关闭自动提交位置，手动调用API进行提交，如下所示
+```java
+//关闭自动提交，默认开启
+properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+
+//手动提交分配到的所有分区的消费位移
+kafkaConsumer.commitSync();
+
+或者
+
+//设置各个分区的消费位移
+Map<TopicPartition, OffsetAndMetadata> offsetMap = new HashMap<>();
+offsetMap.put(new TopicPartition("topic", 1), new OffsetAndMetadata(lastMsgOffset + 1));
+//提交各个分区的消费位移
+kafkaConsumer.commitSync(offsetMap);
+```
+#### 手动异步提交
++ 需关闭自动提交位置，手动调用API进行提交，如下所示
+```java
+//关闭自动提交，默认开启
+properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+
+//手动异步提交分配到的所有分区的消费位移
+kafkaConsumer.commitAsync();
+
+或者
+
+//设置各个分区的消费位移
+Map<TopicPartition, OffsetAndMetadata> offsetMap = new HashMap<>();
+offsetMap.put(new TopicPartition("topic", 1), new OffsetAndMetadata(lastMsgOffset + 1));
+
+//提交各个分区的消费位移，并注入回调方法
+kafkaConsumer.commitAsync(offsetMap, new OffsetCommitCallback() {
+    @Override
+    public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
+        //异步执行完成回调处理
+    }
+});
+```
+
+#### 14、`kafka`消费者提交位移
