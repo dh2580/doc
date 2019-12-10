@@ -283,4 +283,37 @@ kafkaConsumer.commitAsync(offsetMap, new OffsetCommitCallback() {
 });
 ```
 
-#### 14、`kafka`消费者提交位移
+#### 14、`kafka`消费者消费位移自动重置
++ 在消费者消费主题消息时，会根据存放在`__consumer_offsets`主题中的消费位移，来决定下次拉取消息的起始位置。但是在消费刚开始，`__consumer_offsets`主题中并未保存该消费者的消费位移，或者`__consumer_offsets`中保存消费者消费位移的数据因过期而被删除。这时候就需要一个默认值，来重置消费者的消费位移。（*更准确的来说是消费组的消费位移，因为消费者是以消费组的形式进行拉取消息*）
+
++ 可通过参数`ConsumerConfig.AUTO_OFFSET_RESET_CONFIG`来设置 **默认的重置消费位移**，如下所示
+```java
+//可选值有 latest、earliest、none
+properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+```
+
+*如果设置`none`，在需要使用**重置位移**时，会报`NoOffsetForPartitionException`异常*，关于`earliest`、`latest`的示意图如下所示
+![kafka自动重置消费位移](./kafka自动重置消费位移.jpg)
+
+#### 15、`kafka`消费者拉取特定位置消息
+
+#### 16、`kafka`消费者优雅的退出消息拉取
++ 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
+```java
+try {
+    while (true) {
+        //拉取消息
+        ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(1));
+
+        //proc msg
+    }
+
+} catch (WakeupException ex) {
+    //该异常仅仅用于跳出poll(...)，可忽略该异常
+
+} finally {
+    //确保关闭
+    kafkaConsumer.close();
+}
+```
+#### 16、
