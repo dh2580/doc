@@ -295,7 +295,39 @@ properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 *如果设置`none`，在需要使用**重置位移**时，会报`NoOffsetForPartitionException`异常*，关于`earliest`、`latest`的示意图如下所示
 ![kafka自动重置消费位移](./kafka自动重置消费位移.jpg)
 
-#### 15、`kafka`消费者拉取特定位置消息
+#### 15、`kafka`消费者消费位移重置
++ 相比于自动重置而言，还可以手动重置消费者的消费位移，如下代码所示
+```java
+KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<String, String>(properties);
+
+kafkaConsumer.subscribe(Collections.singletonList("topic2"));
+
+//执行拉取动作，获取分配的分区
+kafkaConsumer.poll(Duration.ofMillis(1000));
+
+//获取分区的分区，如果没有之前的 poll(...) 拉取动作，这里将会是一个空集合
+Set<TopicPartition> assignTopicPartitions = kafkaConsumer.assignment();
+
+for (TopicPartition topicPartition : assignTopicPartitions) {
+    //重置分配到的分区消费位移为 10
+    kafkaConsumer.seek(topicPartition, 10);
+
+    或者
+
+    //重置分配到的分区消费位移为起始位置，即从头开始消费
+    kafkaConsumer.beginningOffsets(Arrays.asList(topicPartition));
+
+    或者
+
+    //重置分配到的分区消费位移为最后位置，即跳过前面所有的消息
+    kafkaConsumer.endOffsets(Arrays.asList(topicPartition));
+
+    或者
+
+    //重置分配到的分区消费位移，将消费2019-10-10 00:00:00这个时间点之后的消息（包括这个时间点的消息）
+    kafkaConsumer.offsetsForTimes(Collections.singletonMap(topicPartition, sdf.parse("2019-10-10 00:00:00").getTime()));
+}
+```
 
 #### 16、`kafka`消费者优雅的退出消息拉取
 + 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
@@ -316,4 +348,5 @@ try {
     kafkaConsumer.close();
 }
 ```
-#### 16、
+#### 17、`kafka`消费者再均衡处理
++ 在往消费组内添加消费者，或者消费组中的部分消费者下线时，会出现分区重新分配的情况，这种情况叫做再均衡，主要是对分区在现存消费者之间的分配方案调整
