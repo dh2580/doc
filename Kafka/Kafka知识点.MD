@@ -346,8 +346,13 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
   *重分配后*
   ![kafka消费分区分配之StickyAssignor策略_2](./kafka消费分区分配之StickyAssignor策略_2.jpg)
 
-#### 再均衡
-+ 在往消费组内添加消费者，或者消费组中的部分消费者下线时，会出现分区重新分配的情况，这种情况叫做再均衡，主要是对分区在现存消费者之间的分配进行二次调整
++ **自定义分区分配策略**：需要实现`PartitionAssignor`接口或者`AbstractPartitionAssignor`抽象类，此处看接口定义即可，不在赘述。
+
+#### 分区分配及再均衡过程
++ 
+
+
++ 在往消费组内添加消费者，消费组中的部分消费者下线、消费组订阅的主题增加分区等情况，都会出现分区重新分配的情况，这种情况叫做再均衡，主要是对分区在现存消费者之间的分配进行二次调整。
 
 #### 17、`kafka`消费者优雅的退出消息拉取
 + 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
