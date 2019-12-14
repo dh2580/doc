@@ -329,7 +329,27 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 }
 ```
 
-#### 16、`kafka`消费者优雅的退出消息拉取
+#### 16、`kafka`消费者分区分配及再均衡
+#### 分区分配
++ 在消费者进行消费主题消息前，需要进行分区分配，目前三种分区分配方案：**RangeAssignor**、**RoundRobinAssignor**、**StickyAssignor**
+
++ **RangeAssignor**：在消费组内，对于**每个订阅的主题**，进行分区数除以消费者数，得到一个分区范围，每个消费者按照分区范围顺序分配对应的分区段；如果不能平均分配，则前面的每个消费者多分配一个，如下图所示
+![kafka消费分区分配之RangeAssignor策略](./kafka消费分区分配之RangeAssignor策略.jpg)
+
++ **RoundRobinAssignor**：在消费组内，将**所有订阅的主题**分区按照字母顺序排序，依次分给各个消费者，如果某个消费者没有订阅某个主题，则分配时跳过，寻找下一个消费者分配，如下图所示：
+![kafka消费分区分配之RoundRobinAssignor策略](./kafka消费分区分配之RoundRobinAssignor策略.jpg)
+
++ **StickyAssignor**：粘性分配策略，该策略首次分配时类似于`RoundRobinAssignor`分配策略。但是对于某个消费者下线或者down掉情况，进行分区再分配时，尽量不会去修改存活的消费者的已经分配到的分区，这样可以尽可能使前后两次的分配结果相似，降低由于再分配导致存活消费者已分配到的分区发生大改动，如下图所示。（*因为一个分区从一个存活的消费者，重新分配到另一个存活的消费者意义不是很大，还会存在额外的性能损耗以及关于消费位移提交、重复消费等情况发生*）
+
+  *重分配前*
+  ![kafka消费分区分配之StickyAssignor策略](./kafka消费分区分配之StickyAssignor策略_1.jpg)
+  *重分配后*
+  ![kafka消费分区分配之StickyAssignor策略_2](./kafka消费分区分配之StickyAssignor策略_2.jpg)
+
+#### 再均衡
++ 在往消费组内添加消费者，或者消费组中的部分消费者下线时，会出现分区重新分配的情况，这种情况叫做再均衡，主要是对分区在现存消费者之间的分配进行二次调整
+
+#### 17、`kafka`消费者优雅的退出消息拉取
 + 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
 ```java
 try {
@@ -348,5 +368,3 @@ try {
     kafkaConsumer.close();
 }
 ```
-#### 17、`kafka`消费者再均衡处理
-+ 在往消费组内添加消费者，或者消费组中的部分消费者下线时，会出现分区重新分配的情况，这种情况叫做再均衡，主要是对分区在现存消费者之间的分配方案调整
