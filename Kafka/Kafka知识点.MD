@@ -348,11 +348,69 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 
 + **自定义分区分配策略**：需要实现`PartitionAssignor`接口或者`AbstractPartitionAssignor`抽象类，此处看接口定义即可，不在赘述。
 
-#### 分区分配及再均衡过程
-+ 
+#### 分区再分配情况（再均衡情况）
+1. 新的`Consumer`加入`Consumer Group`
+2. `Consumer Group`内的`Consumer`下线、宕机、或者由于长时间GC/网络延迟等情况导致未向`GroupCoordinator`发送心跳续约
+3. `Consumer Group`订阅的任一`Topic`的`Partition`数量发生变化
+4. `Consumer` 调用 `unsubscribe(...)`或者`assign(...)`取消订阅某些`Topic`
 
+#### 再均衡过程
+每个`Consumer Group`都有对应的`Group Coordinator`（组协调器），负责处理该`Consumer Group`的分区分配和再均衡操作，以一个新的`Consumer`加入已存在的`Consumer Group`，进行再均衡的示例过程进行讲述，具体步骤可分为以下四步：
 
-+ 在往消费组内添加消费者，消费组中的部分消费者下线、消费组订阅的主题增加分区等情况，都会出现分区重新分配的情况，这种情况叫做再均衡，主要是对分区在现存消费者之间的分配进行二次调整。
+1、**寻找`Group Coordinator`**：
+
+向集群中的一个`Broker`发送`FindCoordinatorRequest`（寻找协调器请求），`Broker`接收到请求后，根据该`Consumer`所属的`Consumer Group`计算出`GroupCoordinator`节点位置，具体计算公式如下所示：
+
+> *abs( `consumer_group_id`.hashCode )  %  ( `__consumer_offsets`主题的分区数量 )*
+>
+> 计算出对应的分区后，该分区所对应的`leader`副本所在的`Broker`节点即为该`Consumer Group`的`Group Coordinator`
+
+`Broker`计算出对应的`Group Coordinator`后，将`Group Coordinator`所在节点的`brokerId`、`IP`、`port`包装在`FindCoordinatorResponse`响应对象发送给`Consumer`
+
+2、**加入`Consumer Group`**：
+
+获取到对应的`Group Coordinator`后，`Consumer`向`Group Coordinator`发送`JoinGroupRequest`请求，请求加入`Consumer Group`，其中`JoinGroupRequest`包含了以下主要信息：
+> `group_id`：消费组ID
+>
+> `session_timeout`：与组协调器保持会话的超时时间，默认10s），对应于`ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG`参数
+>
+> `rebalance_timeout`：消费者拉取消息（调用`poll(...)`方法）的最大间隔时间，超过该时间，则认为消费者失效，进行再均衡，对应于`ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG`参数
+>
+> `group_protocols`：该消费者支持的分区策略，和参数`ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG`有关
+
+`Group Coordinator`接收到`JoinGroupRequest`后，需要进行两件事：**选举消费组的leader**、**选举分区策略**
++ **选举消费组的leader**：如果不存在`leader`，则第一个加入消费组的消费者即为`leader`；如果`leader`下线或者退出消费组，则任意选取一个消费者作为`leader`
++ **选举分区策略**：将消费组内所有消费者支持的分区策略组成一个候选集，遍历每个消费者支持的分区策略，为当前遍历消费者支持的第一个分区策略投上一票，最终得票数量最多的策略即为选举出来的策略。*如果选举出来的策略，有部分消费者不支持，则该部分消费者会抛出异常*
+
+选举出消费组的`leader`、分区策略后，将选举结果包装在`JoinGroupResponse`对象发送给各个消费者，其中主要包含以下信息：
+> `leader_id` : 选举出来的`leader`消费者组内标识ID
+>
+> `member_id` : 消费者在组内的标识ID，每个`Consumer`都不一样，在消费组内唯一标识消费者
+> 
+> `group_protocol` : 选举出来的分区策略名称，`range`、`roundrobin`、`sticky`
+>
+> `members` : 消费组内的成员列表，包含每个消费者的`member_id` 和订阅的主题列表，**仅`leader`消费者接收到的`JoinGroupResponse`中才会有该值**
+
+3、**同步分配结果**：
+
+`leader consumer`根据上一阶段选举出来的分区策略，和各个消费者的订阅信息，执行分区分配操作，计算出来各个消费者分配的主题分区结果
+
+各个消费者发送`SyncGroupRequest`请求给`GroupCoordinator`，请求获取分区分配结果，`SyncGroupRequest`请求中主要包含以下数据：
+> `group_id` : 消费组ID
+>
+> `member_id` : 消费者组内标识ID
+>
+> `group_assignment` : 分区分配结果，该字段只有`leader`消费者发送的请求中有数据，其余消费者发送的请求中该数据为空
+
+`Group Coordinator`接收到`leader`消费者的`SyncGroupRequest`请求后，将分区分配结果提取出来，连同消费组的元数据信息存入到`kafka`的`__consumer_offsets`主题中，并将分区分配结果包装在`SyncGroupResponse`对象中返回给消费者
+
+4、**保持心跳**
+
++ 各个消费者获取到各自分配的主题分区后，通过与`Group Coordinator`定时发送`HeartbeatRequest`请求，`Group Coordinator`返回`HeartbeatResponse`响应，以此双方保持心跳。
+
++ 如果某个消费者超过`ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG`配置的时间，仍然未发送心跳，则会视为该消费者下线失效，进行分区再均衡操作
+
++ 如果某个消费者超过`ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG`配置的时间间隔，未拉取更多的消息（即调用`poll(...)`方法），也会被视为下线失效，同样也会进行再均衡操作。
 
 #### 17、`kafka`消费者优雅的退出消息拉取
 + 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
