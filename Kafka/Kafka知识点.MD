@@ -1,4 +1,4 @@
-#### 1、`kafka`体系结构
+## 1、`kafka`体系结构
 + 由三部分组成：**`Producer`(生产者)**、**`Consumer`(消费者)**、**`Broker`(服务代理)**，`Producer`负责发送数据到`Broker`，`Consumer`从`Broker`中拉取消息。
 
 + 每一条发送的消息以`Topic`（主题）为单位进行归类，即每一条消息都属于一个唯一的主题。为了能够水平拓展性能，每一个`Topic`由一个或者多个`Partition`（分区）组成。发送消息时，根据分区规则发送到指定分区，发送到指定分区时，每个消息会分配一个特定的偏移量`offset`，作为该消息在该分区内的唯一标示ID，这个`offet`在分区内是递增的，即分区内的消息是具有顺序性的。*注意顺序性仅仅是针对单个分区内，对于跨分区是保证不了顺序性的*
@@ -11,7 +11,7 @@
 
 ![kafka整体架构](kafka整体架构.jpg)
 
-#### 2、`kafka`生产者发送示例
+## 2、`kafka`生产者发送示例
 ```java
 Properties properties = new Properties();
 //设置broker节点，多节点可以采用逗号分隔，不需要把全部的broker节点都填上
@@ -48,7 +48,7 @@ kafkaProducer.close();
 
 *`KafkaProducer`是线程安全的，可以多线程环境下使用*
 
-#### 3、`kafka`发送失败重试
+## 3、`kafka`发送失败重试
 对于`kafka`发送失败场景，可以在`producer`端设置重试参数`retries`，当发送失败时，自动重试配置次数，失败超过重试次数才会抛出异常，配置代码片段如下
 ```java
 //配置失败重试次数为3
@@ -57,7 +57,7 @@ properties.put(ProducerConfig.RETRIES_CONFIG, 3);
 properties.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 100);
 ```
 
-#### 4、`Partitioner`（分区器）
+## 4、`Partitioner`（分区器）
 + 在消息发送到`Broker`之前，需要在发送端计算出要发送的`target partition`（目标分区），如果`ProducerRecord`中指定了`partition`，则发送到`partition`指向的分区
 
 + 如果`ProducerRecord`未指定`partition`，在默认的分区器(`DefaultPartitioner`)中，如果`key`为`null`，则会以轮询的方式发送到主题的**可用分区**；如果`key`不为`null`，则会对`key`采用`MurmurHash2`算法计算哈希值，然后对**所有分区**进行取模运算，得到目标分区。
@@ -82,7 +82,7 @@ public interface Partitioner extends Configurable, Closeable {
 properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, MyCustomPartitioner.class.getName());
 ```
 
-#### 5、`ProducerInterceptor`（生产者拦截器）
+## 5、`ProducerInterceptor`（生产者拦截器）
 + `ProducerInterceptor`用于在消息发送之前、消息发送成功API返回应答之前或者消息发送失败时进行拦截。具体接口定义如下所示
 
 ```java
@@ -108,7 +108,7 @@ properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, MyCustomProducerInterc
 
 ![kafka发送端处理流程](kafka发送端处理流程1.jpg)
 
-#### 6、`kafka`发送端线程模型
+## 6、`kafka`发送端线程模型
 ![kafka发送端线程模型](kafka发送端线程模型1.jpg)
 
 + 消息在发送出去之前，会先暂存在一个叫做消息累加器（`RecordAccumulator`）的组件中存放，多个消息组成一个`ProducerBatch`对象，每个`ProducerBatch`的默认大小为16KB，可通过设置参数`batch.size`来修改
@@ -121,7 +121,7 @@ properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, MyCustomProducerInterc
 
 + 如果某个`Node`节点对应的存放请求队列长度超过设定大小，`Sender`线程将不会再向该`Node`节点发送消息，直至该节点对应的存放请求队列有空间可用
 
-#### 7、消息可靠写入实现
+## 7、消息可靠写入实现
 为了确保消息发送到`Broker`集群，并且不丢失，可以通过设置参数`acks`来指定目标分区必须有多少个副本写入成功才算是发送成功，配置如下：
 ```java
 //默认1，只要分区的leader副本写入成功，就算写入成功
@@ -135,7 +135,7 @@ properties.put(ProducerConfig.ACKS_CONFIG, "-1");
 ```
 *如果发送失败，可以通过重试机制来提高可靠性*
 
-#### 8、发送消息最大限制
+## 8、发送消息最大限制
 默认每一条发送的消息最大位1MB，可通过设置参数`max.request.size`来修改，如下
 ```java
 //修改最大位3M
@@ -143,14 +143,14 @@ properties.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 3 * 1024 * 1024);
 ```
 *该参数和`Broker`端的`message.max.bytes`参数相对应，需要确保`Producer`端的`max.request.size`参数值不大于`Broker`端的`message.max.bytes`参数值*
 
-#### 9、消费者、消费组与分区分配
+## 9、消费者、消费组与分区分配
 ![kafka消费者、消费组与分区分配](./kafka消费者、消费组与分区分配.jpg)
 
 + 在`Consumer`订阅`Topic`时，是以`Consumer Group`的形式来进行订阅的，每个`Consumer`必定属于某个`Consumer Group`
 
 + 在单个`Consumer Group`内，进行分区分配时，一个分区最多只能分配给一个`Consumer`，不能分配给多个`Consumer`。由此可见，当单个`Consumer Group`内的`Consumer`数量超过分区数量时，会出现部分`Consumer`分配不到分区，如上图中 `Consumer Group2` 中的`C4`
 
-#### 10、`kafka`消费者消费示例
+## 10、`kafka`消费者消费示例
 ```java
 boolean isStop = false;
 
@@ -198,7 +198,7 @@ kafkaConsumer.close();
 
 *`Consuner Group`可以订阅多个`Topic`*
 
-#### 11、`kafka`消费组订阅
+## 11、`kafka`消费组订阅
 + 直接订阅
 ```java
 //该方式直接订阅主题，如果多次订阅，则以最后一次订阅为准
@@ -222,15 +222,15 @@ kafkaConsumer.assign(Arrays.asList(
 ```
 *上述三种订阅，只能选择一种方式进行订阅，即三选一，不能多种订阅同时存在*
 
-#### 12、`ConsumerRecords<String, String>`内部结构
+## 12、`ConsumerRecords<String, String>`内部结构
 ![kafka之ConsumerRecords内部结构](./kafka之ConsumerRecords内部结构.jpg)
 
-#### 13、`kafka`消费者提交位移
+## 13、`kafka`消费者提交位移
 假设消费情况如下图所示
 
 ![kafka消费者提交位移](./kafka消费者提交位移.jpg)
 
-#### 自动提交位移（默认提交方式）
+### 自动提交位移（默认提交方式）
 + 默认采用自动提交，需要确保消费者端参数配置如下（即默认配置）
 ```java
 //开启自动提交，默认开启
@@ -242,7 +242,7 @@ properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 5000);
 
 + **存在消息丢失场景**：拉取到一批消息存入本地缓存队列中，由其他线程进行消费。在其他线程正在消费消息时，由于到了自动提交时间，过早的进行位移提交后，消费者崩溃，下次拉取将从奔溃前提交的位移位置开始拉取
 
-#### 手动同步提交
+### 手动同步提交
 + 需关闭自动提交位置，手动调用API进行提交，如下所示
 ```java
 //关闭自动提交，默认开启
@@ -259,7 +259,7 @@ offsetMap.put(new TopicPartition("topic", 1), new OffsetAndMetadata(lastMsgOffse
 //提交各个分区的消费位移
 kafkaConsumer.commitSync(offsetMap);
 ```
-#### 手动异步提交
+### 手动异步提交
 + 需关闭自动提交位置，手动调用API进行提交，如下所示
 ```java
 //关闭自动提交，默认开启
@@ -283,7 +283,7 @@ kafkaConsumer.commitAsync(offsetMap, new OffsetCommitCallback() {
 });
 ```
 
-#### 14、`kafka`消费者消费位移自动重置
+## 14、`kafka`消费者消费位移自动重置
 + 在消费者消费主题消息时，会根据存放在`__consumer_offsets`主题中的消费位移，来决定下次拉取消息的起始位置。但是在消费刚开始，`__consumer_offsets`主题中并未保存该消费者的消费位移，或者`__consumer_offsets`中保存消费者消费位移的数据因过期而被删除。这时候就需要一个默认值，来重置消费者的消费位移。（*更准确的来说是消费组的消费位移，因为消费者是以消费组的形式进行拉取消息*）
 
 + 可通过参数`ConsumerConfig.AUTO_OFFSET_RESET_CONFIG`来设置 **默认的重置消费位移**，如下所示
@@ -295,7 +295,7 @@ properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 *如果设置`none`，在需要使用**重置位移**时，会报`NoOffsetForPartitionException`异常*，关于`earliest`、`latest`的示意图如下所示
 ![kafka自动重置消费位移](./kafka自动重置消费位移.jpg)
 
-#### 15、`kafka`消费者消费位移重置
+## 15、`kafka`消费者消费位移重置
 + 相比于自动重置而言，还可以手动重置消费者的消费位移，如下代码所示
 ```java
 KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<String, String>(properties);
@@ -329,8 +329,8 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 }
 ```
 
-#### 16、`kafka`消费者分区分配及再均衡
-#### 分区分配
+## 16、`kafka`消费者分区分配及再均衡
+### 分区分配
 + 在消费者进行消费主题消息前，需要进行分区分配，目前三种分区分配方案：**RangeAssignor**、**RoundRobinAssignor**、**StickyAssignor**
 
 + **RangeAssignor**：在消费组内，对于**每个订阅的主题**，进行分区数除以消费者数，得到一个分区范围，每个消费者按照分区范围顺序分配对应的分区段；如果不能平均分配，则前面的每个消费者多分配一个，如下图所示
@@ -348,16 +348,16 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 
 + **自定义分区分配策略**：需要实现`PartitionAssignor`接口或者`AbstractPartitionAssignor`抽象类，此处看接口定义即可，不在赘述。
 
-#### 分区再分配情况（再均衡情况）
+### 分区再分配情况（再均衡情况）
 1. 新的`Consumer`加入`Consumer Group`
 2. `Consumer Group`内的`Consumer`下线、宕机、或者由于长时间GC/网络延迟等情况导致未向`GroupCoordinator`发送心跳续约
 3. `Consumer Group`订阅的任一`Topic`的`Partition`数量发生变化
 4. `Consumer` 调用 `unsubscribe(...)`或者`assign(...)`取消订阅某些`Topic`
 
-#### 再均衡过程
+### 再均衡过程
 每个`Consumer Group`都有对应的`Group Coordinator`（组协调器），负责处理该`Consumer Group`的分区分配和再均衡操作，以一个新的`Consumer`加入已存在的`Consumer Group`，进行再均衡的示例过程进行讲述，具体步骤可分为以下四步：
 
-1、**寻找`Group Coordinator`**：
+#### 1、**寻找`Group Coordinator`**：
 
 向集群中的一个`Broker`发送`FindCoordinatorRequest`（寻找协调器请求），`Broker`接收到请求后，根据该`Consumer`所属的`Consumer Group`计算出`GroupCoordinator`节点位置，具体计算公式如下所示：
 
@@ -367,7 +367,7 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 
 `Broker`计算出对应的`Group Coordinator`后，将`Group Coordinator`所在节点的`brokerId`、`IP`、`port`包装在`FindCoordinatorResponse`响应对象发送给`Consumer`
 
-2、**加入`Consumer Group`**：
+#### 2、**加入`Consumer Group`**：
 
 获取到对应的`Group Coordinator`后，`Consumer`向`Group Coordinator`发送`JoinGroupRequest`请求，请求加入`Consumer Group`，其中`JoinGroupRequest`包含了以下主要信息：
 > `group_id`：消费组ID
@@ -391,7 +391,7 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 >
 > `members` : 消费组内的成员列表，包含每个消费者的`member_id` 和订阅的主题列表，**仅`leader`消费者接收到的`JoinGroupResponse`中才会有该值**
 
-3、**同步分配结果**：
+#### 3、**同步分配结果**：
 
 `leader consumer`根据上一阶段选举出来的分区策略，和各个消费者的订阅信息，执行分区分配操作，计算出来各个消费者分配的主题分区结果
 
@@ -404,7 +404,7 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 
 `Group Coordinator`接收到`leader`消费者的`SyncGroupRequest`请求后，将分区分配结果提取出来，连同消费组的元数据信息存入到`kafka`的`__consumer_offsets`主题中，并将分区分配结果包装在`SyncGroupResponse`对象中返回给消费者
 
-4、**保持心跳**
+#### 4、**保持心跳**
 
 + 各个消费者获取到各自分配的主题分区后，通过与`Group Coordinator`定期发送`HeartbeatRequest`请求，`Group Coordinator`返回`HeartbeatResponse`响应，以此双方保持心跳。
 
@@ -412,7 +412,7 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 
 + 如果某个消费者超过`ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG`配置的时间间隔，未拉取更多的消息（即调用`poll(...)`方法），也会被视为下线失效，同样也会进行再均衡操作。
 
-#### 消费者监听再均衡操作
+### 消费者监听再均衡操作
 在消费者订阅主题时，可传入`ConsumerRebalanceListener`，用于监听再均衡操作，如下代码所示
 ```java
 kafkaConsumer.subscribe(Collections.singletonList("topic"), new ConsumerRebalanceListener() {
@@ -428,7 +428,7 @@ kafkaConsumer.subscribe(Collections.singletonList("topic"), new ConsumerRebalanc
 });
 ```
 
-#### 17、`kafka`消费者优雅的退出消息拉取
+## 17、`kafka`消费者优雅的退出消息拉取
 + 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
 ```java
 try {
