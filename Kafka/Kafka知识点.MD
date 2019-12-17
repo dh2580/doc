@@ -418,7 +418,7 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 kafkaConsumer.subscribe(Collections.singletonList("topic"), new ConsumerRebalanceListener() {
     @Override
     public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-        //再分区开始前
+        //再分区开始前，可用于手动提交位移，防止未来得及提交位移，导致接手分区的其他消费者重复消费
     }
 
     @Override
