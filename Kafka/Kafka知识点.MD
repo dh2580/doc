@@ -406,11 +406,27 @@ for (TopicPartition topicPartition : assignTopicPartitions) {
 
 4、**保持心跳**
 
-+ 各个消费者获取到各自分配的主题分区后，通过与`Group Coordinator`定时发送`HeartbeatRequest`请求，`Group Coordinator`返回`HeartbeatResponse`响应，以此双方保持心跳。
++ 各个消费者获取到各自分配的主题分区后，通过与`Group Coordinator`定期发送`HeartbeatRequest`请求，`Group Coordinator`返回`HeartbeatResponse`响应，以此双方保持心跳。
 
 + 如果某个消费者超过`ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG`配置的时间，仍然未发送心跳，则会视为该消费者下线失效，进行分区再均衡操作
 
 + 如果某个消费者超过`ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG`配置的时间间隔，未拉取更多的消息（即调用`poll(...)`方法），也会被视为下线失效，同样也会进行再均衡操作。
+
+#### 消费者监听再均衡操作
+在消费者订阅主题时，可传入`ConsumerRebalanceListener`，用于监听再均衡操作，如下代码所示
+```java
+kafkaConsumer.subscribe(Collections.singletonList("topic"), new ConsumerRebalanceListener() {
+    @Override
+    public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+        //再分区开始前
+    }
+
+    @Override
+    public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+        //再分区完成后
+    }
+});
+```
 
 #### 17、`kafka`消费者优雅的退出消息拉取
 + 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
