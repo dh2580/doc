@@ -428,7 +428,16 @@ kafkaConsumer.subscribe(Collections.singletonList("topic"), new ConsumerRebalanc
 });
 ```
 
-## 17、`kafka`消费者优雅的退出消息拉取
+## 17、消费者位移信息保存
++ 在旧版本中的`kafka`中，消费者的消费位移（*更准确的来说是消费组的位移*）是保存在`zookeeper`上的，具体保存在`/consumers/{group}/offsets/{topic}/{partition}`路径上。
+
++ 在新版本的`kafka`中，改为保存在`__consumer_offset`主题中，以为`<group, topic, partition>` 为 `key`保存消费组在其订阅的主题分区上的`offset`信息。
+
++ 该位移消息是会过期的，具体过期时间取决于提交位移时，发送`OffsetCommitRequest`请求中的`retentionTime`参数值，如果`retentionTime`参数值为`null`或者`-1`，则采用`broker`端参数的`offsets.retention.minutes`参数配置（默认为7天）
+
++ 如果某个主题被删除了，那么订阅这个主题的所有消费组的`offset`信息也会被对应删除
+
+## 18、`kafka`消费者优雅的退出消息拉取
 + 通过在其他线程里面调用`KafkaConsumer`的`wakeup()`方法，该方法是`KafkaConsumer`中唯一一个可以从其他线程里安全调用的方法，通过抛出`WakeupExcepton`异常，来退出`poll(final Duration timeout)`执行。如下所示
 ```java
 try {
