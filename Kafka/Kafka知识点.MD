@@ -456,3 +456,40 @@ try {
     kafkaConsumer.close();
 }
 ```
+## 19、`Topic`、`Partition`、`Replication`、`broker`之间的关系
+![kafka服务端之Topic、Partition、Replication、broker之间的关系](./kafka服务端之Topic、Partition、Replication、broker之间的关系.jpg)
+
+每个`broker`上的 `${log.dir}` 或者 `${log.dirs}` 目录里（默认是 `/tmp/kafka-logs`），存放该`broker`上的主题分区的日志数据，具体分区日志的存放目录格式如：`{topic}-{partition}`，该目录中存放了该分区副本的`log`文件、`offset`索引文件、`time`索引文件、以及各种检查点文件
+
+*在同一个`broker`上不可能存在同一个`Partition`的多个副本，因为副本的意义就是为了容灾存在*
+
+
+## `Topic`端主要参数
+
++ `max.message.bytes`：每条消息的最大字节数，默认为为1M左右
+
++ `message.timestamp.type`：消息的时间戳类型，默认`CreateTime`，即创建时间，由`Producer`提供，还可设置为`LogAppendTime`，由`broker`端接收消息时提供
+
++ `cleanup.policy`：**日志压缩策略**，默认为`delete`即删除策略，还可以配置`compact`，即对重复`key`的采用压缩策略，一直保存每个`key`最新的值，而不是删除消息
+
++ `compression.type`：**消息压缩策略**，
+
++ `flush.messages`：
+
++ `flush.ms`：
+
++ `retention.bytes`：分区副本中能保存的消息总字节数，默认-1，即没有限制
+
++ `retention.ms`：使用`delete`删除策略时，消息的保存时长，默认7天
+
+
+
+
+
+
+
+
+
+
+## 为什么`Topic`支持增加分区，但不支持减少分区
+`kafka`如需支持主题减少分区，就需要对删除的分区中的数据做处理，如果选择丢弃，那么消息的可靠性会得不到保证，会影响消费者业务；如果选择转移到其他分区，那么消息的顺序性得不到保证，因为`kafka`消息的顺序性是针对单个分区内而言的，合并到其他分区，会与其他分区现存的分区消息产生顺序冲突。此外，如果删除的分区中存在大量的消息需要转移，会面对内部数据大量复制的问题，可能会影响到其他分区的正常运作。
