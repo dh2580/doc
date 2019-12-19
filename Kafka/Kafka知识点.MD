@@ -480,6 +480,34 @@ try {
     
     不建议开启`kafka`分区自平衡，因为这个分区自平衡的操作时间点不可控，在自平衡期间会产生一定的性能问题，可能会导致生产者/消费者发生阻塞，建议根据`kafka`脚本来手动执行分区平衡操作(见`kafka-perferred-replica-election.sh`脚本)
 
+## 21、分区副本重新分配
+### 分区副本重新分配场景
+1. 如需要对某个`broker`节点执行下线操作，需要将`broker`上的分区副本迁移到其他的`broker`节点上；
+2. 上线一个新的`broker`节点，只有新创建的主题分区才会将副本分布到该`broker`上，需将其他节点的分区副本迁移一部分过来时
+
+### 执行分区副本重新分配
+1. 通过`kafka-reassign-partitions.sh`脚本生成在新`broker`节点列表上的一个预分配方案，
+2. 通过`kafka-reassign-partitions.sh`执行预分配方案
+3. 下线旧的`broker`节点列表
+
+### 分区副本重分配原理
+通过控制器为每个分区在新`broker`上添加新副本，然后从分区的`leader`副本复制所有数据，复制完成后，控制器将旧副本从分区的副本清单中移除掉。对于复制数据量比较大的场景，复制可能会花费较多的时间
+
+为了在复制期间，尽量降低对`kafka`正常运作的影响，可以限制复制的网络速率，通过`kafka-config.sh`设定
+
++ `leader.replication.throttled.rate` — `leader`副本复制速率
+
++ `follower.replication.throttled.rate` - `follower`副本复制速率
+
++ `leader.replication.throttled.replicas` - `leader`副本列表
+
++ `follower.replication.throttled.replicas` - `follow`副本列表
+
+## 22、分区数量的上限
+在每个`broker`上并不能无限制的创建分区数量，因为`kafka`作为一个进程运行在操作系统之上，受限于系统的软硬件资源，对于分区数来说，受限于每个进程能够打开的文件描述符数量，每个分区副本即占用一个文件描述符，如果单个`broker`上创建的分区副本数量超过每个进程最大可用的文件描述符数量，将会创建失败。（因为每个分区在`broker`上最多存在一个副本，所以在单台`broker`上说创建分区和创建分区副本是一个意思）
+
+## 23、
+
 ## `Topic`端主要参数
 
 + `max.message.bytes`：每条消息的最大字节数，默认为为1M左右
