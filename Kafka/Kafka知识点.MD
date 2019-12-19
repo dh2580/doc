@@ -463,6 +463,22 @@ try {
 
 *在同一个`broker`上不可能存在同一个`Partition`的多个副本，因为副本的意义就是为了容灾存在*
 
+## 20、`leader`副本选举
++ 为了提高容灾能力，`kafka`实现了多副本机制，对于每个分区，都可以拥有多个副本，其中`leader`副本负责对外提供读写功能，`follow`副本仅负责和`leader`副本之间进行消息同步，`follow`副本并不对外读写服务。
+
++ **`优先副本`**：每个分区 `AR` 集合中的第一个副本，在不发生任何`broker`节点宕机情况下，分区的优先副本就是分区的`leader`副本
+
++ 为了保证各个`broker`节点的负载均衡，创建主题分区时，`kafka`会尽量确保所有主题分区的优先副本在`broker`上均匀分布，*优先副本在`broker`上均匀分布不一定能完全确保`broker`负载均衡，因为还取决于各个`leader`副本的负载情况和分布情况，因为`leader`副本不一定时时刻刻都是优先副本*
+
++ 当`leader`副本所在`broker`节点宕机时，会从`follow`节点中挑选出一个副本作为新`leader`副本，挑选方法就是取`AR`集合中的第一个可用副本，如果后续旧的`leader`副本所在的`broker`节点恢复了，那么旧的`leader`副本将会变为`follower`副本存在
+
++ 为了防止随着时间的推移，过多的`leader`副本不是优先副本，导致`broker`负载不均衡，`kafka`提供了**分区自平衡**功能，在每个`broker`上定期（`leader.imbalance.check.interval.seconds`参数，默认5分钟）检查分区不平衡率
+    ```
+        分区不平衡率 = 不是优先副本的leader个数 / 分区总数
+    ```
+    如果分区不平衡率超过`leader.imbalance.per.broker.percentage`配置，默认10%，则会触发优先副本选举操作，可通过设置`auto.leader.rebalance.enable`为`false`来关闭`kafka`分区自平衡，默认开启。
+    
+    不建议开启`kafka`分区自平衡，因为这个分区自平衡的操作时间点不可控，在自平衡期间会产生一定的性能问题，可能会导致生产者/消费者发生阻塞，建议根据`kafka`脚本来手动执行分区平衡操作(见`kafka-perferred-replica-election.sh`脚本)
 
 ## `Topic`端主要参数
 
@@ -472,11 +488,11 @@ try {
 
 + `cleanup.policy`：**日志压缩策略**，默认为`delete`即删除策略，还可以配置`compact`，即对重复`key`的采用压缩策略，一直保存每个`key`最新的值，而不是删除消息
 
-+ `compression.type`：**消息压缩策略**，
++ `compression.type`：**消息压缩策略**，对消息内容的压缩类型，默认为`producer`，即由生产者决定，可选配置为`uncompressed`（不压缩）、`snappy`、`gzip`
 
-+ `flush.messages`：
++ `flush.messages`：需要收集多少条消息才会强制刷新到磁盘，默认由系统决定
 
-+ `flush.ms`：
++ `flush.ms`：需要等待才会将消息强制刷新到磁盘，默认由系统决定
 
 + `retention.bytes`：分区副本中能保存的消息总字节数，默认-1，即没有限制
 
