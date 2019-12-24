@@ -506,7 +506,54 @@ try {
 ## 22、分区数量的上限
 在每个`broker`上并不能无限制的创建分区数量，因为`kafka`作为一个进程运行在操作系统之上，受限于系统的软硬件资源，对于分区数来说，受限于每个进程能够打开的文件描述符数量，每个分区副本即占用一个文件描述符，如果单个`broker`上创建的分区副本数量超过每个进程最大可用的文件描述符数量，将会创建失败。（因为每个分区在`broker`上最多存在一个副本，所以在单台`broker`上说创建分区和创建分区副本是一个意思）
 
-## 23、
+## 23、分区与日志关系
+![分区与日志关系](./kafka分区日志关系.jpg)
+
+`.log`文件表示消息日志文件，`.timeindex`表示时间戳索引文件，`.index`表示偏移量索引文件，均存放在`broker`的`${log.dir}` 或者 `${log.dirs}`目录下的 `${topic}-${partition}`形式的文件夹内
+
+`{baseOffset}`为固定的20位数字，表示该日志段的起始`offset`
+
+## 24、消息日志结构
+![kafka消息日志结构](./kafka消息日志结构.jpg)
+
++ `attributes`字段在`Record`里面属于弃用字段，不包含任何含义，在`RecordBatch`中，低3位表示压缩类型，第4位表示时间戳类型（0-`CreateTime`，1-`LogAppendTime`）,第5位表示是否属于事务消息（0-非事务，1-事务）
+
++ `producer id`、`producer epoch`、`first sequence`用于支持事务和幂等，下面有介绍
+
++ 如果开启了压缩，则是对`RecordBatch`中的`records`字段进行压缩，而不是对整个`RecordBatch`进行压缩
+
++ `RecordBatch`（消息集）是用于**磁盘存储**、**网络传输**、**消息压缩**的基本单位
+
+## 25、消息日志、消息索引分割
+消息日志、消息索引是以段的形式存在，并且消息日志段、索引端都是一起存在，比如存在一个`{baseOffset}.log`的日志段，必然存在`{baseOffset}.index`、`{baseOffset}.timeindex`的两个文件，**三个文件的`{baseOffset}`一致**，只要满足以下四个条件之一都会触发日志/索引分段操作：
++ 当前日志分段文件大小超过`broker`端参数`log.segment.bytes`配置，默认1GB
++ `{baseOffset}.index`文件大小超过了`broker`端参数`log.index.size.max.bytes`配置，默认10MB
++ 追加的消息偏移量与当前日志分段的偏移量之差超过`Integer.MAX_VALUE`
+    ```java
+    offset - baseOffset > Intege.MAX_VALUE
+    ```
++ 当前日志分段中消息的最大时间戳与系统时间戳差值超过`broker`端参数`log.roll.ms`或者`log.roll.hours`参数配置，默认7天
+
+*对于`{baseOffset}.index`来说，消息的`offset`是单调递增的，对于`${baseOffset}.timeindex`来说，消息的`timestamp`如果是`LogAppendTime`，则是单调递增的，如果是`CreateTime`，则不保证单调递增，因为`CreateTime`来源于各个`producer`*
+
+## 26 消息查找
+偏移量索引文件、时间戳索引文件均采用了**稀疏索引结构**，即不保证每个消息在索引文件里都有对应的索引项，类似于跳跃表的索引，只能先定位到一定范围，然后在目标范围内进行遍历查找。
+
+### 根据`offset`查找消息
+根据`offset`定位到目标偏移量索引文件，在目标偏移量索引文件里采用二分查找的方式定位到`offset`位置，如果`offset`不在索引文件中，则返回小于`offset`的最大偏移量位置，然后从该位置向后遍历查找
+
+### 根据`timestamp`查找消息
++ 将`targetTimestamp`和每个`.timeindex`文件中的最大时间`largestTimestamp`逐个对比，找到不小于`targetTimestamp`的`largestTimestamp`所对应的`.timeindex`文件
+
++ `largestTimestamp`取`.timeindex`文件中的最后一条索引项的时间戳，如果最后一条索引项的时间戳为0，则取该`.timeindex`文件的最近修改时间
+
++ 找到目标时间戳索引文件后，根据二分法查找不大于`targetTimestamp`的最大索引项，根据该索引项向后查找`targetTimestamp`对应的索引项
+
++ 根据查询得到的索引项，再去对应的**偏移量索引文件**中发起二次查找
+
+**基于偏移量的查找、基于时间戳的查找类似于基于聚簇索引查询、基于非聚簇索引查询**
+
+## 27、日志清理策略
 
 ## `Topic`端主要参数
 
