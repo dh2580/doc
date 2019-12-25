@@ -554,6 +554,46 @@ try {
 **基于偏移量的查找、基于时间戳的查找类似于基于聚簇索引查询、基于非聚簇索引查询**
 
 ## 27、日志清理策略
+有两种日志清理策略，通过`broker`端 `log.cleanup.policy` 参数来配置，可选值有 `delete`（默认策略）、`compact`
+
+### **日志删除**
+按照保留策略定期执行一个专门的日志删除任务来检测和删除不符合保留策略的日志分段，可通过配置`broker`端的 `log.retention.check.interval.ms` 参数来确定执行间隔，默认5分钟，相关的日志保留策略如下
++ **基于时间**
+  
+  根据`broker`端的 `log.retention.hours`、或者 `log.retention.minutes`、或`log.retention.ms` 参数来决定需要删除的日志分段，默认只保留最近7天的消息。
+  
+  从第一个日志分段开始遍历，从该日志分段的时间索引文件中取出最后一条索引项作为`largestTimestamp`，如果`largestTimestamp`为0，则取该日志分段的最近修改时间
+
+  将所有`largestTimestamp`早于设定的保留时间的日志分段全部删除即可
+
++ **基于日志大小**
+
+  检测所有日志分段的总`size`，如果超过`broker`端配置的`log.retention.bytes`参数，默认 -1 表示无限大，则触发删除操作
+
+  将所有日志分段的总`size` 减去 `log.retention.bytes` 得到的 `diff`，即为本次需要删除的日志大小
+
+  从前面的日志分段开始删除，直至满足删除的日志分段总`size`大于或者等于`diff`
+
++ **基于日志起始偏移量**
+
+    在`broker`上的每个分区日志都有一个起始偏移量，叫做 `logStartOffset`，可以通过`KafkaAdminClient`管理工具向`broker`发送`DeleteRecordsRequest`请求设置`logStartOffset`，默认情况下`logStartOffset`是第一个日志分段的`baseOffset`
+
+    从头开始遍历日志分段，如果某个日志分段的下一个日志分段的`baseOffset`小于或者等于`logStartOffset`，则该日志分段即为需要删除的日志分段
+  
+
+### **日志压缩**
+对每个消息的`key`进行整合，对于有相同`key`的不同`value`值，只保留最后一个版本，相比于日志删除策略，日志压缩不仅可以将每个写入`broker`的`key`和它的最新`value`保存下来，还能在`kafka`崩溃恢复时，减少需要恢复的数据的加载量，从而加快`kafka`恢复速度
+
+不是所有在`broker`上的分区日志都会进行日志压缩清理，而是会对污浊率超过`broker`端`log.cleaner.min.cleanable.ratio`，默认 0.5 的分区日志进行压缩，污浊率计算公式如下：
+```java
+污浊率 = 所有未压缩分段的总大小 / ( 所有压缩分段的总大小 + 所有未压缩分段的总大小 )
+```
+![kafka日志压缩1](./kafka日志压缩1.jpg)
+
+执行过日志压缩后的日志分段文件要比之前的未压缩钱的日志分段文件要小，为了防止出现大量的小文件，在清理过程会所有的日志文件进行分组，每个组内的所有日志分段大小之和不超过`broker`端`log.segment.bytes`参数配置，按照组进行日志压缩处理，每个组压缩后只会产生一个压缩后的日志文件，如下图所示
+![kafka日志压缩2](./kafka日志压缩2.jpg)
+
+日志压缩是针对`key`而言的，因此需要确保每个消息的`key`都不能为`null`，执行过日志压缩后的日志分段，其中的消息`offset`不再是连续的，但仍是递增的
 
 ## `Topic`端主要参数
 
