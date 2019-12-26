@@ -603,6 +603,22 @@ try {
 为了加速消息的读取，`kafka`还采用了零拷贝技术来进一步提升性能。零拷贝即将数据直接从磁盘文件复制到网卡设备中，属于纯内核模式下的操作，不需要经过应用程序，减少了内核态和用户态之间的上下文切换，大大提高了消息的读取速度。关于数据正常拷贝以及零拷贝示意图如下所示
 ![kafka数据零拷贝](./kafka数据零拷贝.jpg)
 
+## 29、`broker controller`（控制器）
+`kafka controller`相当于`broker`集群之间的`leader`节点，用于处理一下场景
++ 负责分区的`leader`副本选举
++ 新增/删除`topic`，或者 `topic` 的 `ISR`集合发生变化时，负责通知所有`broker`更新`topic`元数据
++ 执行`topic`分区重分配操作
+
+### **`broker controller`的选举**
+在任意时刻，`broker`集群中有且仅有一个`controller`，`broker`间进行选举`controller`时，会在`zookeeper`中尝试创建`/controller`**临时节点**，最终成功创建这个`/controller` zk临时节点的`broker`则为`controller`，在`zk`的`/controller`节点中存放的数据如下
+```json
+{"version":1,"brokerid":0,"timestamp":"1577193032785"}
+```
+此外，为了防止存在过期的`controller`，`zookeep`中还会存在一个记录`controller`纪元的**持久化节点**：`/controller_epoch`，其值存放了`controller`的纪元信息
+
+### 存在意义
+在旧的`kafka`版本中，每个`broker`都会在`zookeeper`上为主题、分区、副本注册大量的监听器，当主题、分区、副本发生变化时，会唤醒许多不必要的监听器，严重依赖于`zookeeper`，会存在羊群效应、脑裂问题存在，采用`controller`设计的好处是只有一个`broker`会在`zookeeper`上注册大量监听器，其他`broker`只需要在`zookeeper`上注册少量监听器即可，减少了对`zookeep`的依赖。
+
 ## `Topic`端主要参数
 
 + `max.message.bytes`：每条消息的最大字节数，默认为为1M左右
