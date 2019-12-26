@@ -619,31 +619,13 @@ try {
 ### 存在意义
 在旧的`kafka`版本中，每个`broker`都会在`zookeeper`上为主题、分区、副本注册大量的监听器，当主题、分区、副本发生变化时，会唤醒许多不必要的监听器，严重依赖于`zookeeper`，会存在羊群效应、脑裂问题存在，采用`controller`设计的好处是只有一个`broker`会在`zookeeper`上注册大量监听器，其他`broker`只需要在`zookeeper`上注册少量监听器即可，减少了对`zookeep`的依赖。
 
-## `Topic`端主要参数
-
-+ `max.message.bytes`：每条消息的最大字节数，默认为为1M左右
-
-+ `message.timestamp.type`：消息的时间戳类型，默认`CreateTime`，即创建时间，由`Producer`提供，还可设置为`LogAppendTime`，由`broker`端接收消息时提供
-
-+ `cleanup.policy`：**日志压缩策略**，默认为`delete`即删除策略，还可以配置`compact`，即对重复`key`的采用压缩策略，一直保存每个`key`最新的值，而不是删除消息
-
-+ `compression.type`：**消息压缩策略**，对消息内容的压缩类型，默认为`producer`，即由生产者决定，可选配置为`uncompressed`（不压缩）、`snappy`、`gzip`
-
-+ `flush.messages`：需要收集多少条消息才会强制刷新到磁盘，默认由系统决定
-
-+ `flush.ms`：需要等待才会将消息强制刷新到磁盘，默认由系统决定
-
-+ `retention.bytes`：分区副本中能保存的消息总字节数，默认-1，即没有限制
-
-+ `retention.ms`：使用`delete`删除策略时，消息的保存时长，默认7天
+## 30、`kafka`与延迟任务
 
 
+## 31、`kakfa`与幂等
 
 
-
-
-
-
+## 32、`kafka`与事务
 
 
 ## 为什么`Topic`支持增加分区，但不支持减少分区
