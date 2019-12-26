@@ -619,7 +619,7 @@ try {
 ### 存在意义
 在旧的`kafka`版本中，每个`broker`都会在`zookeeper`上为主题、分区、副本注册大量的监听器，当主题、分区、副本发生变化时，会唤醒许多不必要的监听器，严重依赖于`zookeeper`，会存在羊群效应、脑裂问题存在，采用`controller`设计的好处是只有一个`broker`会在`zookeeper`上注册大量监听器，其他`broker`只需要在`zookeeper`上注册少量监听器即可，减少了对`zookeep`的依赖。
 
-## 30、`kafka`与延迟任务
+## 30、`kafka`与延迟队列
 
 
 ## 31、`kakfa`与幂等
