@@ -671,7 +671,66 @@ try {
 
 
 ## 33、`kafka`与事务
-`producer id`如果未指定，则会由`kafka`分配，
+幂等是单个分区而言的，不能跨分区也不能跨主题，而事务是可以跨分区跨主题的（前提是所有的`topic`在同一个`kafka`集群内），可以保证在同一个事务内的**消息发送**、**位移提交**等组合操作以原子性的方式执行，若需开启事务特性，需要保证以下条件
++ 开启幂等
++ `producer`端的`ProducerConfig.TRANSACTIONAL_ID_CONFIG`不为空或者`null`，即需要配置`transactional.id`
+
+关于事务`kafka`提供了以下API
+```java
+//初始化事务，必须
+void initTransactions();
+
+//开始事务，必须
+void beginTransacton();
+
+//提交消费位移，不必须
+void sendOffsetsToTransaction()
+
+//提交事务，与 abortTransaction() 二选一
+void commitTransaction()
+
+//终止事务，与 commitTransaction() 二选一
+void abortTransaction()
+```
+
+### 基础理论
++ `transactional.id` 表示事务ID，即某个事务的唯一标识，同一时刻该 `transactional.id`下最多只能有一个事务在执行，不可能同时存在多个事务在同时执行。
+ 
++ `transactional.id` 和`producer`的关系是一一对应的，不会同时存在一个 `transactional.id` 下对应着多个 `producer` ，**这里不同于消费组与消费者的关系**。当有两个 `producer` 配置了相同的 `transactional.id` 时，后启动的`producer`会成为`transactional.id`对应的`producer`，而先启动的`producer`则会报错。（ *这里的启动对应于调用`initTransactions()`方法* ）
+
+ + 每个`transactional.id` 都有一个对应的 `TransactionCoordinator`（事务协调器），负责事务的协调执行，每次执行一个事务时都会在主题`__transaction_state` 中存储一条消息，用于存储当前事务的相关信息，该消息的数据格式如下所示
+![kafka事务消息格式](./kafka事务消息格式.jpg)
+
+### 事务执行流程
++ 发送`FindCoordinatorRequest`给任意一个`broker`，寻找事务协调器，`Broker`接收到请求后，根据该`transactional.id`计算出`TransactionCoordinator`节点位置，具体计算公式如下所示：
+
+    > *abs( `transactional.id`.hashCode )  %  ( `__transaction_state`主题的分区数量 )*
+    >
+    > 计算出对应的分区后，该分区所对应的`leader`副本所在的`Broker`节点即为该`transactional.id`的`TransactionCoordinator`
+    >
+    > `Broker`计算出对应的`TransactionCoordinator`后，将`TransactionCoordinator`所在节点的`brokerId`、`IP`、`port`包装在`FindCoordinatorResponse`响应对象发送给`producer`
+
++ 向`TransactionCoordinator`获取`producer id`、`producer epoch`，事务协调器在`__transaction_state`主题中存储一条关于该`transactional.id`的事务消息
+
++ 开启事务，执行相关操作，将事务涉及到的相关主题分区包装在事务消息中的`transaction_partitions`结构中，发送新的事务消息到`__transaction_state`（`__transaction_state`采用的压缩策略，不是删除策略，所以旧的事务消息会被新的事务消息覆盖掉）
+
++ 提交或者终止事务，更新事务状态，发送新的事务消息到`__transaction_state`
+
++ 删除`__transaction_state`中对应的事务消息
+
+### 事务隔离性
+在`Consumer`端可以通过配置参数 `isolation.level` 配置事务的隔离性，默认是`read_uncommitted` ，即未提交读，`Consumer`可以消费到未提交的事务的相关消息。此外，该参数还可以设置为`read_committed`，即提交读，那样子`Consumer`将会看不到未提交的事务的相关消息。
+
+对于`read_committed`隔离级别，`Consumer`会在在内部缓存未交事务的消息，直至事务提交后，`Consumer`才会将内部缓存的事物消息返回给业务代码，**注意是在Consumer端缓存，不是Broker端缓存**。
+
+### 事务消息的存储
+该事务消息并不是上面提到的在`__transaction_state`主题中存储的消息，而是事务中涉及到的正常消息，即`RecordBatch`。`RecordBatch`中`attributes`字段的第五位为1，即表示是事务消息。
+
+在事务消息列表的最后一定会存在一个控制消息，用于表示事务的结束，控制消息为`ControlBatch`，也是一个消息集，不过该消息集中只有一条`Record`，具体数据结构如下所示
+![kafka控制消息数据结构](./kafka控制消息数据结构.jpg)
+
++ `type`表示控制类型：0 - `ABORT`，1 - `COMMIT`
++ `coordinator_epoch` 表示 `TransactionCoordinator` 纪元
 
 
 ## 为什么`Topic`支持增加分区，但不支持减少分区
