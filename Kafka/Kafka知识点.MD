@@ -653,9 +653,24 @@ try {
 
 
 ## 32、`kakfa`与幂等
+`kafka`中，幂等是对于发送消息而言，即防止将`producer`将同一条消息重复发送到`broker`场景，默认是未开启幂等的，需要通过配置来开启，开启幂等需要保证 `produer` 端参数配置如下
++ `ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG` = `true` ，                默认 `false`
++ `ProducerConfig.RETRIES_CONFIG` > 0 ，                                默认 0
++ `ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION` <= 5 ，        默认 5
++ `ProducerConfig.ACKS_CONFIG` = -1 ，                                  默认 1
+
+在第 24 条的消息日志结构中，消息集`RecordBatch`中存在三个字段：`producer id`、`producer epoch`、`first sequence`，其中`producer id`和`producer epoch`用于唯一标示`prodcuer`，`first sequence`表示消息集中的第一条消息的序列号。
+
+在`broker`端会为每一个`<PID, Partition>`维护序列号，用于表示`PID`对应的 `producer` 发送到每一个分区的消息序列号，该序列号由`producer`生成，且单调递增。当`broker`接收到`producer`发来的消息时，会将新消息的序列号和保存的序列号进行对比：
++ 如果等于保存的序列 + 1 ，则接受该新消息；
++ 如果小于保存的序列号 + 1，则拒绝该消息，即认为重复发送；
++ 如果大于保存的序列号 + 1，则表明中间存在消息未写入，出现乱序，则返回给生产者`OutOfOrderSequenceException`异常。
+
+*因为`producer`发送的是消息集，所以`broker`在接受消息，判断序列号时，会结合`RecordBatch`中的 `first sequence` 和 `records_count`两个字段进行**整体判断比较**。*
 
 
 ## 33、`kafka`与事务
+
 
 
 ## 为什么`Topic`支持增加分区，但不支持减少分区
