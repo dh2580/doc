@@ -16,7 +16,7 @@
 Properties properties = new Properties();
 //设置broker节点，多节点可以采用逗号分隔，不需要把全部的broker节点都填上
 properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
-//生产者标示ID，可选
+//生产者标示ID，可选，如果未填写，则由broker端生成
 properties.put(ProducerConfig.CLIENT_ID_CONFIG, "producer-1");
 //消息Key序列化类
 properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -671,7 +671,7 @@ try {
 
 
 ## 33、`kafka`与事务
-
+`producer id`如果未指定，则会由`kafka`分配，
 
 
 ## 为什么`Topic`支持增加分区，但不支持减少分区
