@@ -51,4 +51,4 @@
 
 ### `MIXED`模式
 
-`STATEMENT`模式、`ROW`模式混合使用。一般的复制使用`STATEMENT`模式，对于`STATEMENT`模式下下无法复制的操作采用`ROW`模式保存，`MySQL`会根据执行的`SQL`语句选择适合的模式。
+`STATEMENT`模式、`ROW`模式混合使用。一般的复制使用`STATEMENT`模式，对于`STATEMENT`模式下下无法复制的操作采用`ROW`模式保存，`MySQL`会根据执行的`SQL`语句选择适合的模式，简称`MBR`。
