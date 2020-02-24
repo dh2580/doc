@@ -140,7 +140,7 @@ Process finished with exit code 1
 ```
 
 *释放当前锁不仅可以通过调用`wait()`方法释放，也可以通过*`wait(long timeout)`方法释放，只不过`wait(long timeout)`方法不同的是，线程调用该方法后，进入`TIMED_WAITING`（有限等待）状态，如果等待超时则退出`TIMED_WAITING`（有限等待）状态，重新抢锁，如果抢锁失败，则进入`BLOCKED`（阻塞）状态，关于线程的状态变化可参考下图
-![线程状态转换](images/线程状态转换.png)
+![线程状态转换](images/线程状态转换.jpg)
 
 #### `synchronized` 底层实现
 在字节码层面，`synchronized`经过编译后，会在同步块前后分别形成`monitorenter`、`monitorexit`两个字节码指令，这两个字节码指令将同步代码块包围起来，如下所示Java代码
