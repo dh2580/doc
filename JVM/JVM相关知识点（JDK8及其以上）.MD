@@ -282,7 +282,7 @@
 
 + **并发预重分配（`Concurrent Prepare for Relocate`）**
 
-  根据特定的查询条件，统计得出目标回收`Region`集合，组成**重分配集合（`Relocation Set`）**`，并将重分配集中的对象在其对象指针中标记为重分配状态
+  根据特定的查询条件，统计得出目标回收`Region`集合，组成**重分配集合（`Relocation Set`）**，并将重分配集中的对象在其对象指针中标记为重分配状态
 
 + **并发重分配（`Concurrent Relocate`）**
   
