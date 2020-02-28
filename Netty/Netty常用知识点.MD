@@ -96,3 +96,13 @@
 + 将每一个缓存的对象包装成为一个`DefaultHandle`类对象，利用`Stack`对象存储回收的对象，以及获取对象，回收和获取分别对应于`push()`、`pop()`操作。`Stack`对象包含了一个本地的对象数组，和一个`WeakOrderQueue`对象组成的链表，其中本地对象数组存储了本线程回收的对象，`WeakOrderQueue`链表中的每一个节点存储了其他的一个线程回收到该`Stack`中的对象。当取对象时，优先从本地对象数组中取，如果本地对象数组中取不到对象，则从`WeakOrderQueue`链表中优先获取head `WeakOrderQueue`的head `Link`中的全部对象，置换到本地对象数组。(每个`WeakOrderQueue`都对应着一个`Link`类型的链表 ，每个`Link`节点都包含一个对象数组，用于本地对象数组为空时，从`WeakOrderQueue`中获取`DefaultHandle`，迁移到`Stack`中的本地对象数组。)。
 
 + 缓存的对象大多数是`ByteBuffer`对象，比如`PooledHeapByteBuf`、`PooledDirectByteBuf`
+
+#### 15、`ChannelPromise` 与 `ChannelFuture`的区别
+
++ `ChannelFuture` 用于获取IO操作的结果，以及注册结果监听器
+
++ `ChannelPromise` 不仅可以用于获取IO操作的结果、注册结果监听器，而且还可以设置IO操作的结果，相当于可写的`ChannelFuture`
+
+#### 引用
+
++ [Netty5 线程引用关系](./https://www.cnblogs.com/tiancai/p/9959572.html)
