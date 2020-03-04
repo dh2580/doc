@@ -607,7 +607,7 @@ try {
 `kafka controller`相当于`broker`集群之间的`leader`节点，用于处理一下场景
 + 负责分区的`leader`副本选举
 + 新增/删除`topic`，或者 `topic` 的 `ISR`集合发生变化时，负责通知所有`broker`更新`topic`元数据
-+ 执行`topic`分区重分配操作
++ 执行`topic`分区副本重分配操作
 
 ### **`broker controller`的选举**
 在任意时刻，`broker`集群中有且仅有一个`controller`，`broker`间进行选举`controller`时，会在`zookeeper`中尝试创建`/controller`**临时节点**，最终成功创建这个`/controller` zk临时节点的`broker`则为`controller`，在`zk`的`/controller`节点中存放的数据如下
