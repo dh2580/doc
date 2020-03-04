@@ -660,7 +660,7 @@ try {
 + `ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION` <= 5 ，        默认 5
 + `ProducerConfig.ACKS_CONFIG` = -1 ，                                  默认 1
 
-在第 24 条的消息日志结构中，消息集`RecordBatch`中存在三个字段：`producer id`、`producer epoch`、`first sequence`，其中`producer id`和`producer epoch`用于唯一标示`prodcuer`，`first sequence`表示消息集中的第一条消息的序列号。
+在第 24 条的消息日志结构中，消息集`RecordBatch`中存在三个字段：`producer id`、`first sequence`，其中`producer id`用于标示`Producer`，简称**PID**，`first sequence`表示消息集中的第一条消息的序列号。
 
 在`broker`端会为每一个`<PID, Partition>`维护序列号，用于表示`PID`对应的 `producer` 发送到每一个分区的消息序列号，该序列号由`producer`生成，且单调递增。当`broker`接收到`producer`发来的消息时，会将新消息的序列号和保存的序列号进行对比：
 + 如果等于保存的序列 + 1 ，则接受该新消息；
