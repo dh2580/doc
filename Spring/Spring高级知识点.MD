@@ -47,3 +47,5 @@
 + 提供了对`Kotlin`语言的支持
 + 测试套件中增加了对`JUnit5`的支持，`Spring5`中可以在单元测试中使用`JDK8`提供的函数编程特性
 + 中止了部分过时`API`的支持，比如`Hibernate3`、`Hibernate4`以及`XMLBeans`、`Guava Cache`（Spring5中放弃Guava Cache改用Caffeine作为本地Cache组件）
+
+*以上内容全部基于`Spring5`版本*

@@ -472,13 +472,13 @@ try {
 
 + 当`leader`副本所在`broker`节点宕机时，会从`follow`节点中挑选出一个副本作为新`leader`副本，挑选方法就是取`AR`集合中的第一个可用副本，如果后续旧的`leader`副本所在的`broker`节点恢复了，那么旧的`leader`副本将会变为`follower`副本存在
 
-+ 为了防止随着时间的推移，过多的`leader`副本不是优先副本，导致`broker`负载不均衡，`kafka`提供了**分区自平衡**功能，在每个`broker`上定期（`leader.imbalance.check.interval.seconds`参数，默认5分钟）检查分区不平衡率
++ 为了防止随着时间的推移，过多的`leader`副本不是优先副本，导致`broker`负载不均衡，`kafka`提供了**分区自动平衡**功能，在每个`broker`上定期（`leader.imbalance.check.interval.seconds`参数，默认5分钟）检查分区不平衡率
     ```
         分区不平衡率 = 不是优先副本的leader个数 / 分区总数
     ```
-    如果分区不平衡率超过`leader.imbalance.per.broker.percentage`配置，默认10%，则会触发优先副本选举操作，可通过设置`auto.leader.rebalance.enable`为`false`来关闭`kafka`分区自平衡，默认开启。
+    如果分区不平衡率超过`leader.imbalance.per.broker.percentage`配置，默认10%，则会触发优先副本选举操作，可通过设置`auto.leader.rebalance.enable`为`false`来关闭`kafka`分区自动平衡，默认开启。
     
-    不建议开启`kafka`分区自平衡，因为这个分区自平衡的操作时间点不可控，在自平衡期间会产生一定的性能问题，可能会导致生产者/消费者发生阻塞，建议根据`kafka`脚本来手动执行分区平衡操作(见`kafka-perferred-replica-election.sh`脚本)
+    不建议开启`kafka`分区自动平衡，因为这个分区自动平衡的操作时间点不可控，在自平衡期间会产生一定的性能问题，可能会导致生产者/消费者发生阻塞，建议根据`kafka`脚本来手动执行分区平衡操作(见`kafka-perferred-replica-election.sh`脚本)
 
 ## 21、分区副本重新分配
 ### 分区副本重新分配场景
@@ -607,7 +607,7 @@ try {
 `kafka controller`相当于`broker`集群之间的`leader`节点，用于处理一下场景
 + 负责分区的`leader`副本选举
 + 新增/删除`topic`，或者 `topic` 的 `ISR`集合发生变化时，负责通知所有`broker`更新`topic`元数据
-+ 执行`topic`分区重分配操作
++ 执行`topic`分区副本重分配操作
 
 ### **`broker controller`的选举**
 在任意时刻，`broker`集群中有且仅有一个`controller`，`broker`间进行选举`controller`时，会在`zookeeper`中尝试创建`/controller`**临时节点**，最终成功创建这个`/controller` zk临时节点的`broker`则为`controller`，在`zk`的`/controller`节点中存放的数据如下
@@ -660,7 +660,7 @@ try {
 + `ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION` <= 5 ，        默认 5
 + `ProducerConfig.ACKS_CONFIG` = -1 ，                                  默认 1
 
-在第 24 条的消息日志结构中，消息集`RecordBatch`中存在三个字段：`producer id`、`producer epoch`、`first sequence`，其中`producer id`和`producer epoch`用于唯一标示`prodcuer`，`first sequence`表示消息集中的第一条消息的序列号。
+在第 24 条的消息日志结构中，消息集`RecordBatch`中存在三个字段：`producer id`、`first sequence`，其中`producer id`用于标示`Producer`，简称**PID**，`first sequence`表示消息集中的第一条消息的序列号。
 
 在`broker`端会为每一个`<PID, Partition>`维护序列号，用于表示`PID`对应的 `producer` 发送到每一个分区的消息序列号，该序列号由`producer`生成，且单调递增。当`broker`接收到`producer`发来的消息时，会将新消息的序列号和保存的序列号进行对比：
 + 如果等于保存的序列 + 1 ，则接受该新消息；
