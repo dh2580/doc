@@ -1,37 +1,31 @@
-# doc
+# 个人技术栈学习文档
 
-#### 项目介绍
-个人学习资料以及文档
++ [Redis](./Redis 知识点总结.MD)
 
-#### 软件架构
-软件架构说明
++ [JVM垃圾回收相关.MD](./JVM/JVM相关知识点（JDK8及其以上）.MD)
 
++ [Kafka使用与底层实现](./Kafka/Kafka知识点.MD)
 
-#### 安装教程
++ [Netty——常用知识点](./Netty/Netty常用知识点.MD)
 
-1. xxxx
-2. xxxx
-3. xxxx
++ [Netty——ByteBuffer与ByteBuf区别](./Netty/ByteBuffer与ByteBuf区别.MD)
 
-#### 使用说明
++ [Netty——解决粘包和拆包问题的四种方案](./Netty/Netty解决粘包和拆包问题的四种方案.MD)
 
-1. xxxx
-2. xxxx
-3. xxxx
++ [Netty——为什么Netty使用NIO而不是AIO](./Netty/为什么Netty使用NIO而不是AIO.MD)
 
-#### 参与贡献
++ [Spring基础知识](./Spring/Spring基础.MD)
 
-1. Fork 本项目
-2. 新建 Feat_xxx 分支
-3. 提交代码
-4. 新建 Pull Request
++ [SpringMVC使用](./Spring/SpringMVC.MD)
 
++ [Spring高级知识](./Spring/Spring高级知识点.MD)
 
-#### 码云特技
++ [分布式一致性协议与Zookeeper实现](./Zookeeper/Zookeeper知识点.MD)
 
-1. 使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2. 码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3. 你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4. [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5. 码云官方提供的使用手册 [http://git.mydoc.io/](http://git.mydoc.io/)
-6. 码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
++ [布隆过滤器](./布隆过滤器.MD)
+
++ [MySQL复制机制](./架构设计/【数据库】MySQL复制机制.MD)
+
++ [MySQL如何解决读写分离下的数据一致性](./架构设计/【数据库】如何解决读写分离的一致性问题.MD)
+
++ [服务端安全之如何防止接口盗刷](./架构设计/【防盗刷】如何防止接口盗刷.MD)
