@@ -1,6 +1,6 @@
 # 个人技术栈学习文档
 
-+ [Redis](./Redis 知识点总结.MD)
++ [Redis](./Redis知识点总结.MD)
 
 + [JVM垃圾回收相关.MD](./JVM/JVM相关知识点（JDK8及其以上）.MD)
 
