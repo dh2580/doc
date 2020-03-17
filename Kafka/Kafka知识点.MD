@@ -305,7 +305,7 @@ kafkaConsumer.subscribe(Collections.singletonList("topic2"));
 //执行拉取动作，获取分配的分区
 kafkaConsumer.poll(Duration.ofMillis(1000));
 
-//获取分区的分区，如果没有之前的 poll(...) 拉取动作，这里将会是一个空集合
+//获取主题的分区，如果没有之前的 poll(...) 拉取动作，这里将会是一个空集合
 Set<TopicPartition> assignTopicPartitions = kafkaConsumer.assignment();
 
 for (TopicPartition topicPartition : assignTopicPartitions) {
