@@ -29,3 +29,9 @@
 + [MySQL如何解决读写分离下的数据一致性](./架构设计/【数据库】如何解决读写分离的一致性问题.MD)
 
 + [服务端安全之如何防止接口盗刷](./架构设计/【防盗刷】如何防止接口盗刷.MD)
+
++ [限速器之Guava RateLimiter](./常用书签/Blog/限速器之Guava RateLimiter.MD)
+
++ [Java多线程之sychronized](./常用书签/Blog/Java多线程之sychronized.MD)
+
++ [Java多线程之ThreadLocal](./常用书签/Blog/Java多线程之ThreadLocal.MD)
