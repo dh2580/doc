@@ -14,7 +14,7 @@
 + 可载入多个具有继承关系的上下文，使得每一个上下文都专注于一个特定的层次，即支持立体结构的上下文结构，如web应用中，web层的`applicationContext`和应用层的`applicationContext`
 
 #### 3、`Spring`框架是怎么解决`Bean`之间的循环依赖
-+ 宏观上来说，`Spring`在实例化`Bean`时，将`Bean`的创建和装配进行分离，具体到代码层来说，`Spring`在初始化`Bean`时，采用了三级缓存模式：`singletonObjects`（第一级缓存，存放已经实例化好的单例对象）、`earlySingletonObjects`（第二级缓存，存放已创建但并未完成相关装配处理（依赖属性设置、装配`Aware`类型接口、注册销毁接口等），提前对外暴露的单例对象）、`singletonFactories`（第三级缓存，存放要被实例化的对象的对象工厂）。当一个`Bean`进行初始化时，通过构造函数创建完成后，会被包装成为一个ObjectFactory对象，并以为beanName作为key保存在`singletonFactories`对象中，然后进行后续处理（装配属性、装配`Aware`类型接口、调用`init`方法、注册销毁方法），期间如果有其他`Bean`创建需要该`Bean`，则先通过`singletonFactories`中的`ObjectFactory`对象获取，并且把该对象从`singletonFactoies`转移到`earlySingletonObjects`中。在该对象后续处理都完成后，将对象放置在`singletonObjects`中，然后清除掉`earlySingletonObjects`、`singletonFactories`中关于该对象的相关数据。
++ 宏观上来说，`Spring`在实例化`Bean`时，将`Bean`的创建和装配进行分离，具体到代码层来说，`Spring`在初始化`Bean`时，采用了三级缓存模式：`singletonObjects`（第一级缓存，存放已经实例化、装配完成的单例对象）、`earlySingletonObjects`（第二级缓存，存放已创建但并未完成相关装配处理（依赖属性设置、装配`Aware`类型接口、注册销毁接口等），提前对外暴露的单例对象）、`singletonFactories`（第三级缓存，存放要被实例化的对象的对象工厂）。当一个`Bean`进行初始化时，通过构造函数创建完成后，会被包装成为一个ObjectFactory对象，并以为beanName作为key保存在`singletonFactories`对象中，然后进行后续处理（装配属性、装配`Aware`类型接口、调用`init`方法、注册销毁方法），期间如果有其他`Bean`创建需要该`Bean`，则先通过`singletonFactories`中的`ObjectFactory`对象获取，并且把该对象从`singletonFactoies`转移到`earlySingletonObjects`中。在该对象后续处理都完成后，将对象放置在`singletonObjects`中，然后清除掉`earlySingletonObjects`、`singletonFactories`中关于该对象的相关数据。
 
 #### 4、`Spring Bean`生命周期
 ![SpringBean生命周期](SpringBean生命周期.jpeg)
