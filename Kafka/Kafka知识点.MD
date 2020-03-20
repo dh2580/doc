@@ -525,7 +525,7 @@ try {
 + `RecordBatch`（消息集）是用于**磁盘存储**、**网络传输**、**消息压缩**的基本单位
 
 ## 25、消息日志、消息索引分割
-消息日志、消息索引是以段的形式存在，并且消息日志段、索引段都是一起存在，比如存在一个`{baseOffset}.log`的日志段，必然存在`{baseOffset}.index`、`{baseOffset}.timeindex`的两个文件，**三个文件的`{baseOffset}`一致**，只要满足以下四个条件之一都会触发日志/索引分段操作：
+消息日志、消息索引是以段的形式存在，并且消息日志段、索引段都是一起存在，比如存在一个`{baseOffset}.log`的日志段，必然存在`{baseOffset}.index`（即偏移量索引）、`{baseOffset}.timeindex`（即时间戳索引）的两个文件，**三个文件的`{baseOffset}`一致**，只要满足以下四个条件之一都会触发日志/索引分段操作：
 + 当前日志分段文件大小超过`broker`端参数`log.segment.bytes`配置，默认1GB
 + `{baseOffset}.index`文件大小超过了`broker`端参数`log.index.size.max.bytes`配置，默认10MB
 + 追加的消息偏移量与当前日志分段的偏移量之差超过`Integer.MAX_VALUE`
