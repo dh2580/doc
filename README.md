@@ -40,7 +40,7 @@
 
 + [布隆过滤器](./布隆过滤器.MD)
 
-+ [限速器之Guava RateLimiter](./常用书签/Blog/限速器之Guava%20RateLimiter.MD)
++ [限速器之Guava RateLimiter实现原理浅析](./常用书签/Blog/限速器之Guava%20RateLimiter.MD)
 
 + [服务端安全之如何防止接口盗刷](./架构设计/【防盗刷】如何防止接口盗刷.MD)
 
