@@ -7,7 +7,7 @@
 
 + 一个分区在同一个`Broker`节点上，最多只有一个副本，不存在同一个`Broker`上存在一个分区的多个副本。（*出于副本是为了提高容灾能力存在的，多个副本存在于同一个`Broker`节点上并无任何意义*）
 
-+ `follower`副本上的消息数据和`leader`副本上的消息数据之间会存在一定的滞后，所有副本统称为`AR`，和`leader`副本保持一定程度同步的副本（包括`leader`副本）组成`ISR`，和`leader`副本同步滞后过多的副本（不包括`leader`副本）组成`OSR`。由此可见，进行故障转移时，只有`ISR`中的副本可作为候选副本，`OSR`中的副本不能作为候选副本。
++ `follower`副本上的消息数据和`leader`副本上的消息数据之间会存在一定的滞后，所有副本统称为`AR`（即`Assigned Replicas`），和`leader`副本保持一定程度同步的副本（包括`leader`副本）组成`ISR`（即`In-Sync Replicas`），和`leader`副本同步滞后过多的副本（不包括`leader`副本）组成`OSR`（即`Out-of-Sync Replicas`）。由此可见，进行故障转移时，只有`ISR`中的副本可作为候选副本，`OSR`中的副本不能作为候选副本。
 
 ![kafka整体架构](kafka整体架构.jpg)
 
