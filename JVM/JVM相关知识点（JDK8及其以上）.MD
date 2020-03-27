@@ -183,7 +183,7 @@
 
 ### 跨代引用处理
 
-`G1`为`Region`内置了一个类似于哈希表的数据结构，叫做`RSet`，`Key`表示指向本`Region`的其他`Region`（*其实是其他`Region`的起始地址*），`Value`则是一个以字节数组实现的`CardTable`。
+`G1`为每个`Region`内置了一个类似于哈希表的数据结构，叫做`RSet`，`Key`表示指向本`Region`的其他`Region`（*其实是其他`Region`的起始地址*），`Value`则是一个以字节数组实现的`CardTable`。
 
 通过将每一个`Region`划分为多个`Card`，字节数组的下标则表示`Region`中的`Card`下标，对应下标上的值通过`0`、`1`来表示是否是`Dirty Card`。关于`Card Table`的维护，则是通过写后屏障来实现的。
 ![G1跨代引用](./G1跨代引用.png)
