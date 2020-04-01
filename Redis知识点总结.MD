@@ -62,6 +62,8 @@ Redis 知识点总结
 > 元素个数小于 `list-max-ziplist-entries`（默认值512个），同时每个元素的大小小于 `list-max-ziplist-value`（默认64个字节）
 >### 2、`linkedlist`（链表）
 > 不满足`ziplist`的使用条件时
+>### 3、`quicklist`（快速链表）
+> **`Redis`3.2版本之后均采用`quicklist`来存储**
 
 ## 12、`Set`内部编码
 >### 1、`intset`（整数集合）
