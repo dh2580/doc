@@ -45,7 +45,7 @@ Redis 知识点总结
 ## 8、`Hash`类型的内部编码
 >### 1、`ziplist`（压缩列表）
 > 元素个数小于 `hash-max-ziplist-entries` （默认值512），并且所有值的大小都小于 `hash-max-ziplist-value` （默认值64字节），该方案采用更加紧凑的结构实现多个元素的连续存储，较为节省内存
->### 2、`hashtable`（哈希表）
+>### 2、`hashtable`（哈希表，Redis内部叫做字典）
 > 无法满足 `ziplist` 存储条件时，采用该方案,因为数据较多的情况下，`ziplist`的读写效率会有所下降。`hashtable` 的读写复杂度为 `O(1)`
 
 ## 9、`List`类型最多可以存储多少个元素
@@ -68,7 +68,7 @@ Redis 知识点总结
 ## 12、`Set`内部编码
 >### 1、`intset`（整数集合）
 > 元素都是整数，并且元素个数小于`set-max-intset-entries`（默认值512个）
->### 2、`hashtable`（哈希表）
+>### 2、`hashtable`（哈希表，Redis内部叫做字典）
 > 不满足`intset`的使用条件时
 
 ## 13、`ZSet`内部编码
