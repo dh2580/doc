@@ -31,7 +31,7 @@
 + 事件处理如需异步处理，建议采用监听者异步处理方式，因为那样子可以做到通过是否在处理方法上添加`@Async`决定是否进行异步处理。对于同步处理的监听器来说，仍然可以保持事务的安全性，对于不要求事务安全性的处理采用异步处理，即部分同步处理、部分异步处理
 
 #### 6、`@AutoWire`自动装配原理
-+ 在Bean实例化后，未装配属性前（通过`<property>`标签装配），会被当前`Bean`容器中的所有`InstantiationAwareBeanPostProcessor`类型的BeanProcessor过滤处理，`AutowiredAnnotationBeanPostProcessor`就是`InstantiationAwareBeanPostProcessor`接口的间接实现子类。在`AutowiredAnnotationBeanPostProcessor`中，重写了接口`InstantiationAwareBeanPostProcessor`的`postProcessProperties(...)`方法，通过对当前Bean的`BeanDefinition`判断是否有被`AutoWire`修饰的属性，如果有则优先装配该属性类型的Bean，然后注入到该Bean。
++ 在Bean实例化后，装配属性时，会被当前`Bean`容器中的所有`InstantiationAwareBeanPostProcessor`类型的BeanProcessor过滤处理，`AutowiredAnnotationBeanPostProcessor`就是`InstantiationAwareBeanPostProcessor`接口的间接实现子类。在`AutowiredAnnotationBeanPostProcessor`中，重写了接口`InstantiationAwareBeanPostProcessor`的`postProcessProperties(...)`方法，通过对当前Bean的`BeanDefinition`判断是否有被`AutoWire`修饰的属性，如果有则优先装配该属性类型的Bean，然后注入到该Bean。
 
 #### 7、`SpringBoot`自动装配的实现原理
 + 当`SpringBoot`启动时，会检查类路径下各个`jar`包中的`META-INF`下的`spring.factories`文件，如果存在该文件，则从该文件中查找配置`org.springframework.boot.autoconfigure.EnableAutoConfiguration`指向的自动配置类，然后加载该类，自动配置类往往用`@Configuration`装饰，表示其是一个Java类型的配置类，并且其自身，以及其包含的`Bean`正常情况下都会采用`@Condition`装饰，即采用条件装配，这就为什么在引入相关的`starter`依赖包后，会自动创建一些`Bean`
