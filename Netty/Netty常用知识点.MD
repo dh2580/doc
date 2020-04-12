@@ -16,7 +16,7 @@
 
 + 基于换行符，通过数据流中的换行符对数据进行分割，具体实现有`LineBasedFrameDecoder`
 
-+ 基于末尾特殊分隔符，通过指定特殊分隔符作为分割标志，然后基于分隔符对数据流进行分割成单个数据报文，具体实现有`DelimiterBasedFrameDecoder`
++ 基于特殊分隔符，通过指定特殊分隔符作为分割标志，然后基于分隔符对数据流进行分割成单个数据报文，具体实现有`DelimiterBasedFrameDecoder`
 
 + 消息头部预置消息长度，在数据报文的头部添加长度字段，根据长度字段指定的包长度对接受到的数据进行解码，从而得到消息体数据，具体实现有 `LengthFieldBasedFrameDecoder`与`LengthFieldPrepender`组合使用
 
