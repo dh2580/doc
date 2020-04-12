@@ -88,7 +88,7 @@
 + ByteBuf还支持`slice`操作，可以ByteBuf分解为多个共享同一存储的ByteBuf，避免了内存拷贝，类似于`ArrayList`的`subList(...)`方法
 
 #### 13、Netty的内存池实现原理
-+ Netty内存由多个内存区域组成，每个内存区域由多个Chunk（块）组成，每个Chunk又由多个Page（页）组成，每个Page由多个SubPage（子页）组成。
++ Netty内存由多个`Arena`（内存区域）组成，每个内存区域由多个`Chunk`（块）组成，每个`Chunk`又由多个`Page`（页）组成，每个`Page`由多个`SubPage`（子页）组成。
 + 在PoolChunk中，Page的大小是固定，默认8K，Page被构建成一颗二叉树，每个Page的父节点能分配当前节点能分配空间的double空间。当一个节点代表的内存区域被分配出去后，这个节点会被标记为已分配，自这个节点以下的所有节点在后续的内存分配请求中都会被忽略。
 + 对于每个Page的内部，由多个SubPage组成，每个SubPage大小都是相同的，但是SubPage的大小取决于第一次在该Page内申请的内存大小。如果Page大小为8K，第一在Page内申请内存大小为1K，则自此以后该Page只能分配1K大小的内存，超过1K则需在新的Page中分配。
 
