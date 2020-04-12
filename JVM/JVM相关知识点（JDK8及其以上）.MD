@@ -245,7 +245,7 @@
   该`GC`是一个全程需要`STW`的`Serial Old`垃圾回收，类比于`CMS`出现`ConcurrentModeFailure`情况。触发的情况主要有以下两个：
   1. 并发标记期间，用户线程耗尽空余内存空间，新分配的对象无内存空间可用
 
-  2. 回收复制`Region`到新的`Region`中时，新`Region`中没有足够内存可用，也没有新`Region`可用。
+  2. 回收复制旧`Region`中的存活对象到新`Region`中时，新`Region`中没有足够内存可用，也没有新`Region`可用。
   
 
 ### 对比于`CMS`优势
