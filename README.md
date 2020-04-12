@@ -39,7 +39,10 @@
 + [交替打印奇偶数的常见实现方式](./常用书签/Blog/交替打印奇偶数的常见实现方式.MD)
 
 ### **微服务**
+
 + [Hystrix工作流程](./微服务/Hystrix工作流程.png)
+
++ [HystrixCircuitBreaker原理](./微服务/HystrixCircuitBreaker原理.png)
 
 ### **架构设计**
 
