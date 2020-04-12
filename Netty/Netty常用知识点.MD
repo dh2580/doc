@@ -74,7 +74,7 @@
 + 服务端建立boss线程池、worker线程池，配置启动相关参数，关联一个childHandler并在childHandler里面，设置ChannelPipeline上的相关ChannelHandler组件，这些组件类似于`Servelet`中的`Filter`，用于对接受到的或者即将对外写出的数据报文进行处理，最后监听指定端口启动服务。客户端向服务端发起连接后，服务端boss线程池负责接收客户端发来的连接，将客户端的连接注册到轮询组件Selector上面。Selector不停地轮询注册到其上面的channel，检测是否有就绪的channel，如果有，则触发IO事件。事件通过ChannelPipeline进行传递到对应的ChannelHandler，ChannelHandler对IO事件进行处理，读取数据报文，业务逻辑处理，生成响应数据，将响应数据写入到SocketChannel，此过程由worker线程池执行。对于数据出站，同样要经过一系列对应的ChannelHandler处理后才会通过网络发送到客户端。
 
 #### 11、Netty的线程模型是怎么样的
-+ 采用`Reactor`线程模型，通过配置启动参数，可以支持`Refactor`单线程模型、`Refactor`多线程模型、主从`Refactor`多线程模型。Netty服务端在启动时，创建两个独立的线程池（`NioEventLoopGroup`），一个线程池负责接受客户端的`TCP`连接，另一个线程池负责处理`I/O`相关的读写操作。此外，为了避免由于多个IO线程并发操作同一个`channel`导致并发问题，或者引入同步机制导致处理更加复杂，采用了每个`channel`绑定到一个特定的线程上，此后该线程负责此`channel`的读写事件处理。线程与绑定的`channel`之间是一对多关系，即一个线程上可以绑定多个`channel`，但是一个`channel`不能绑定到多个线程上
++ 采用`Reactor`线程模型，通过配置启动参数，可以支持`Reactor`单线程模型、`Reactor`多线程模型、主从`Reactor`多线程模型。Netty服务端在启动时，创建两个独立的线程池（`NioEventLoopGroup`），一个线程池负责接受客户端的`TCP`连接，另一个线程池负责处理`I/O`相关的读写操作。此外，为了避免由于多个IO线程并发操作同一个`channel`导致并发问题，或者引入同步机制导致处理更加复杂，采用了每个`channel`绑定到一个特定的线程上，此后该线程负责此`channel`的读写事件处理。线程与绑定的`channel`之间是一对多关系，即一个线程上可以绑定多个`channel`，但是一个`channel`不能绑定到多个线程上
 
 #### 12、Netty的零拷贝提体现在哪里，与操作系统上的有什么区别
 + 操作系统层面的零拷贝是指避免在用户态（`User-Space`）、内核态（`Kernel-Space`）之间来回拷贝数据，例如Linux中提供的`mmap`（内存映射）系统调用，将一段用户空间映射到内核空间，用户对这段内存空间的修改可以直接反映到内核空间，同样内核空间对这段内存空间的修改也可以直接反映到用户空间
