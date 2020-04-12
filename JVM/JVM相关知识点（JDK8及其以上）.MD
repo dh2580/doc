@@ -190,7 +190,7 @@
 
 `G1`垃圾回收器是基于`Region`、面向局部收集的垃圾回收器，不同于`CMS`垃圾回收目标是整个老年代（`Major GC`），`G1`是通过建立起**可预测的停顿时间模型**，优先回收那些价值最大的`Region`，从而达到在用户设定的停顿时间（*通过参数 `+XX:MaxGCPauseMillis`设定，默认是200ms*）内完成最大内存的回收。（*所谓回收价值即回收能释放的空间和回收所需要的耗时*）
 
-`G1`不再采用固定大小以及固定数量的分代内存划分，而是将`Java`堆划分为多个大小一样的独立区域，叫做`Region`，`Region`的容量大小可以通过参数`-XX:G1HeapRegionSize`来设置。每个分代都由一系列的`Region`组成（*注意，不要求这些`Region`连续*）。每个`Region`根据需要，在不同的时间点可能扮演不同的角色（**`Eden Region`、`Survivor Region`、`Old Region`、`Humongous Region`**）
+`G1`仍然采用分代的概念，但不再采用固定大小的分代内存划分，而是将`Java`堆划分为多个大小一样的独立区域，叫做`Region`，`Region`的容量大小可以通过参数`-XX:G1HeapRegionSize`来设置。每个分代都由一系列的`Region`组成（*注意，不要求这些`Region`连续*）。每个`Region`根据需要，在不同的时间点可能扮演不同的角色（**`Eden Region`、`Survivor Region`、`Old Region`、`Humongous Region`**）
 
 `Humongous Region`专门用于存储大对象，如果一个对象的大小超过一个`Region`区域容量的一半，则认为该对象是一个大对象。如果一个大对象的内存占用超过`Region`的容量，该大对象将会被放入N个连续的`Humongous Region`中。在进行`GC`回收时，`G1`大多数情况下把`Humongous Region`作为老年代的一部分来处理。
 
