@@ -20,7 +20,7 @@
 
 + 消息头部预置消息长度，在数据报文的头部添加长度字段，根据长度字段指定的包长度对接受到的数据进行解码，从而得到消息体数据，具体实现有 `LengthFieldBasedFrameDecoder`与`LengthFieldPrepender`组合使用
 
-+ 自定义粘包器拆包器，通过实现`MessageToByteEncoder`、`ByteToMessageDecoder`来自定义粘包和拆包处理，其中`MessageToByteEncoder`接口将响应数据编码为一个`ByteBuf`对象，`ByteToMessageDecoder`是将接收到的`ByteBuf`数据转换为某个对象数据
++ 自定义粘包器拆包器，通过实现`MessageToByteEncoder`、`ByteToMessageDecoder`来自定义粘包和拆包处理，其中`MessageToByteEncoder`接口将响应数据编码为一个`ByteBuf`对象，`ByteToMessageDecoder`是将接收到的`ByteBuf`数据解码为某个对象数据
 
 #### 5、同步与异步、阻塞与非阻塞的区别？
 + 同步/异步是指操作与操作之间的一个关系，同步是指一系列的操作必须要一个一个去执行（比如B/S架构设计，客户端提交请求 -> 服务端处理 -> 服务端返回 -> 客户端呈现结果），等前一个操作完成后才能执行后面的操作。而异步可以同时执行多个操作，并且通过回调通知的方式通知调用者执行结果
