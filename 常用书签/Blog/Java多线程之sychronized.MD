@@ -262,6 +262,7 @@ ObjectMonitor() {
 
 上面讲述了关于对象内存结构以及`Mark Word`的内存结构，那么这些和`synchronized`有什么关系呢，尤其是`Mark Word`？ 在`Mark Word`中，有个关键字段：**锁标志**，始终存在，不管对象是处于什么状态，这个锁状态就是和`synchronized`相关。当通过`synchronized`对
 一个对象加锁时，`Mark Word`会变成如下所示状态：
+
 锁状态|30`bit`|2`bit`（锁标志）
 -|-|-
 重量级锁|指向互斥量(重量级锁)的指针|10
