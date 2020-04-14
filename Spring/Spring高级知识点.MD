@@ -17,7 +17,7 @@
 + 宏观上来说，`Spring`在实例化`Bean`时，将`Bean`的创建和装配进行分离，具体到代码层来说，`Spring`在初始化`Bean`时，采用了三级缓存模式：`singletonObjects`（第一级缓存，存放已经创建、装配完成的单例对象）、`earlySingletonObjects`（第二级缓存，存放已创建但并还未完成相关装配处理（依赖属性设置、装配`Aware`类型接口、注册销毁接口等），提前对外暴露的单例对象）、`singletonFactories`（第三级缓存，存放创建完成，但还没开始装配的对象的对象工厂，即`ObjectFactory<T>`）。当一个`Bean`进行初始化时，通过反射机制创建完成后，会被包装成为一个ObjectFactory对象，并以为beanName作为key保存在`singletonFactories`对象中，然后进行后续处理（装配属性、装配`Aware`类型接口、调用`init`方法、注册销毁方法），期间如果有其他`Bean`创建需要该`Bean`，则先通过`singletonFactories`中的`ObjectFactory`对象获取，并且把该对象从`singletonFactoies`转移到`earlySingletonObjects`中。在该对象后续处理都完成后，将对象放置在`singletonObjects`中，然后清除掉`earlySingletonObjects`、`singletonFactories`中关于该对象的相关数据。
 
 #### 4、`Spring Bean`生命周期
-![SpringBean生命周期](SpringBean生命周期.jpeg)
+![SpringBean生命周期](./SpringBean生命周期.jpg)
 
 #### 5、`Spring`事件机制中异步处理、同步处理问题
 + `Spring`事件处理分为两种：**同步处理**、**异步处理**，其中**异步处理**分为**发布者异步发布**、**监听者异步处理**
