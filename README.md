@@ -38,17 +38,19 @@
 
 + [交替打印奇偶数的常见实现方式](./常用书签/Blog/交替打印奇偶数的常见实现方式.MD)
 
-### **微服务**
+### **设计模式**
 
-+ [Hystrix工作流程](./微服务/Hystrix工作流程.png)
-
-+ [HystrixCircuitBreaker原理](./微服务/HystrixCircuitBreaker原理.png)
++ [单例模式的五种实现](./常用书签/Blog/单例模式的五种实现.MD)
 
 ### **架构设计**
 
 + [布隆过滤器](./布隆过滤器.MD)
 
 + [限速器之Guava RateLimiter实现原理浅析](./常用书签/Blog/限速器之Guava%20RateLimiter.MD)
+
++ [Hystrix工作流程](./微服务/Hystrix工作流程.png)
+
++ [HystrixCircuitBreaker原理](./微服务/HystrixCircuitBreaker原理.png)
 
 + [服务端安全之如何防止接口盗刷](./架构设计/【防盗刷】如何防止接口盗刷.MD)
 
