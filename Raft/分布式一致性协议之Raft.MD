@@ -115,3 +115,9 @@
 + `new_term` - 候选节点期待成为主节点的未来任期
 
 + `log index` - 当前节点的最新日志下标，包含已经应用到状态机的日志、以及未应用到状态机的日志。**该日志下标不仅用于与新主节点的日志复制，也用于新主节点的选举投票权衡。**
+
+### **引用**
+
++ [一文搞懂Raft算法](https://www.cnblogs.com/xybaby/p/10124083.html)
+
++ [Raft动画展示](http://thesecretlivesofdata.com/raft/)
