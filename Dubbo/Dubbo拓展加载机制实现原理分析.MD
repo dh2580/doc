@@ -66,7 +66,7 @@
 
     String defaultProtocolName = protocolExtensionLoader.getDefaultExtensionName();
     ```
-    获取默认拓展点实现是根据**默认拓展点实现名称**来获取的，**默认拓展点实现名称**来源于在拓展点上的`@SPI`注解中的`value()`属性值，如`Filter`拓展点源码所示
+    获取默认拓展点实现是根据**默认拓展点实现名称**来获取的，**默认拓展点实现名称**来源于在拓展点上的`@SPI`注解中的`value()`属性值，如`Protocol`拓展点源码所示
 
     ![dubbo-Protocol-code](./images/dubbo-Protocol-code.jpeg)
 
