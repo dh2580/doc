@@ -1,0 +1,60 @@
+@startuml
+skinparam sequenceMessageAlign center
+
+NettyServerHandler -> NettyServer: received()
+NettyServer -> MultiMessageHandler: received()
+MultiMessageHandler -> HeartbeatHandler: received()
+HeartbeatHandler -> AllChannelHandler :received()
+AllChannelHandler -> AllChannelHandler :getExecutorService() - 获取对应的线程池
+AllChannelHandler -> ThreadPoolExecutor: execute() - 提交任务执行
+ThreadPoolExecutor -> ChannelEventRunnable: run() - 执行任务
+ChannelEventRunnable -> DecodeHandler: received()
+DecodeHandler -> DecodeHandler: decode()
+DecodeHandler -> Request: getData() - 提取请求数据
+Request -> DecodeHandler: 返回请求数据
+DecodeHandler -> DecodeableRpcInvocation: decode() - 从流中解码数据
+DecodeHandler -> HeaderExchangeHandler: received()
+HeaderExchangeHandler -> HeaderExchangeHandler: handleRequest()
+HeaderExchangeHandler -> "DubboProtocol$ExchangeHandlerAdapter": reply()
+"DubboProtocol$ExchangeHandlerAdapter" -> DubboProtocol: getInvoker()
+DubboProtocol -> "DubboProtocol$ExchangeHandlerAdapter": 返回对应的 Invoker
+ "DubboProtocol$ExchangeHandlerAdapter" -> "ProtocolFilterWrapper$1": invoke()
+"ProtocolFilterWrapper$1" -> EchoFilter: invoke()
+EchoFilter -> ClassLoaderFilter: invoke()
+ClassLoaderFilter -> GenericFilter: invoke()
+GenericFilter -> ContextFilter: invoke()
+ContextFilter -> TraceFilter: invoke()
+TraceFilter -> TimeoutFilter: invoke()
+TimeoutFilter -> MonitorFilter: invoke()
+MonitorFilter -> ExceptionFilter: invoke()
+ExceptionFilter -> "RegistryProtocol$InvokerDelegate": invoker()
+"RegistryProtocol$InvokerDelegate" -> DelegateProviderMetaDataInvoker: invoke()
+DelegateProviderMetaDataInvoker -> "JdkProxyFactory$1": invoke()
+"JdkProxyFactory$1" -> "JdkProxyFactory$1": doInvoke()
+"JdkProxyFactory$1" -> "JdkProxyFactory$1": 反射调用，返回结果对象 RpcResult
+"JdkProxyFactory$1" -> DelegateProviderMetaDataInvoker: 返回结果对象 RpcResult
+DelegateProviderMetaDataInvoker -> "RegistryProtocol$InvokerDelegate": 返回结果对象 RpcResult
+"RegistryProtocol$InvokerDelegate" -> ExceptionFilter: 返回结果对象 RpcResult
+ExceptionFilter -> ExceptionFilter: onResponse()
+ExceptionFilter -> MonitorFilter: 返回结果对象 RpcResult
+MonitorFilter -> MonitorFilter: onResponse()
+MonitorFilter -> TimeoutFilter: 返回结果对象 RpcResult
+TimeoutFilter -> TimeoutFilter: onResponse()
+TimeoutFilter -> TraceFilter: 返回结果对象 RpcResult
+TraceFilter -> TraceFilter: onResponse()
+TraceFilter -> ContextFilter: 返回结果对象 RpcResult
+ContextFilter -> ContextFilter: onResponse()
+ContextFilter -> GenericFilter: 返回结果对象 RpcResult
+GenericFilter -> GenericFilter: onResponse()
+GenericFilter -> ClassLoaderFilter: 返回结果对象 RpcResult
+ClassLoaderFilter -> ClassLoaderFilter: onResponse()
+ClassLoaderFilter -> EchoFilter: 返回结果对象 RpcResult
+EchoFilter -> EchoFilter: onResponse()
+EchoFilter -> "ProtocolFilterWrapper$1": 返回结果对象 RpcResult
+"ProtocolFilterWrapper$1" ->  "DubboProtocol$ExchangeHandlerAdapter": 返回结果对象 RpcResult
+"DubboProtocol$ExchangeHandlerAdapter" -> HeaderExchangeHandler: 返回封装的 CompletableFuture对象
+HeaderExchangeHandler -> HeaderExchangeChannel: 拆封 CompletableFuture对象为 Response对象
+HeaderExchangeChannel -> HeaderExchangeChannel: send()
+HeaderExchangeChannel -> NettyChannel: send()
+NettyChannel -> NioSocketChannel: writeAndFlush()
+@enduml
