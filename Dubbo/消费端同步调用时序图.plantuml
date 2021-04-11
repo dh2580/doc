@@ -1,0 +1,59 @@
+@startuml
+skinparam sequenceMessageAlign center
+"$Proxy" -> InvokerInvocationHandler: invoke()
+InvokerInvocationHandler -> InvokerInvocationHandler: createInvocation()
+InvokerInvocationHandler -> MockClusterInvoker: invoke()
+MockClusterInvoker -> FailoverClusterInvoker: invoke()
+FailoverClusterInvoker -> RegistryDirectory: list()
+RegistryDirectory -> RegistryDirectory: doList()
+RegistryDirectory -> RouterChain: route()
+RouterChain -> RouterChain: 遍历每个 Router 对象，返回匹配的 Invoker 列表
+RouterChain -> RegistryDirectory: 返回匹配的 Invoker 列表
+RegistryDirectory -> FailoverClusterInvoker: 返回匹配的 Invoker 列表
+FailoverClusterInvoker -> FailoverClusterInvoker: initLoadBalance() - 获取对应的负载均衡器
+FailoverClusterInvoker -> FailoverClusterInvoker: doInvoke()
+FailoverClusterInvoker -> FailoverClusterInvoker: select()
+FailoverClusterInvoker -> FailoverClusterInvoker: doSelect()
+FailoverClusterInvoker -> LoadBalance: select() - 返回选择的 Invoker 对象
+LoadBalance -> FailoverClusterInvoker: 返回选择的 Invoker 对象
+FailoverClusterInvoker -> "RegistryDirectory$InvokerDelegate": invoke()
+"RegistryDirectory$InvokerDelegate" -> ListenerInvokerWrapper: invoke()
+ListenerInvokerWrapper -> "ProtocolFilterWrapper$1": invoke() - 调用 Filter 过滤器链
+"ProtocolFilterWrapper$1" -> ConsumerContextFilter: invoke()
+ConsumerContextFilter -> FutureFilter: invoke()
+FutureFilter -> MonitorFilter: invoke(）
+MonitorFilter -> DubboInvoker: invoke()
+DubboInvoker -> DubboInvoker: doInvoke()
+DubboInvoker -> ReferenceCountExchangeClient: request()
+ReferenceCountExchangeClient -> HeaderExchangeClient: request()
+HeaderExchangeClient -> HeaderExchangeChannel: request()
+HeaderExchangeChannel -> HeaderExchangeChannel: 构造 DefaultFuture 对象
+HeaderExchangeChannel -> NettyClient: send()
+NettyClient -> NettyChannel: send()
+NettyChannel -> NioSocketChannel: writeAndFlush()
+NioSocketChannel -> NettyChannel
+NettyChannel -> NettyClient
+NettyClient -> HeaderExchangeChannel: 返回构造的 DefaultFuture 对象
+HeaderExchangeChannel -> HeaderExchangeClient: 返回构造的 DefaultFuture 对象
+HeaderExchangeClient -> ReferenceCountExchangeClient: 返回构造的 DefaultFuture 对象
+ReferenceCountExchangeClient -> DubboInvoker: 返回构造的 DefaultFuture 对象
+DubboInvoker -> DefaultFuture: get()
+DefaultFuture -> DefaultFuture: 等待获取结果，返回 DecodeableRpcResult 结果对象
+DefaultFuture -> DubboInvoker: 返回 DecodeableRpcResult 结果对象
+DubboInvoker -> MonitorFilter: 返回 DecodeableRpcResult 结果对象
+MonitorFilter -> MonitorFilter: onResponse()
+MonitorFilter -> FutureFilter: 返回 DecodeableRpcResult 结果对象
+FutureFilter -> FutureFilter: onResponse()
+FutureFilter -> FutureFilter: syncCallback() - 同步方法回调
+FutureFilter -> ConsumerContextFilter: 返回 DecodeableRpcResult 结果对象
+ConsumerContextFilter -> ConsumerContextFilter: onResponse()
+ConsumerContextFilter -> "ProtocolFilterWrapper$1": 返回 DecodeableRpcResult 结果对象
+"ProtocolFilterWrapper$1" -> ListenerInvokerWrapper: 返回 DecodeableRpcResult 结果对象
+ListenerInvokerWrapper -> "RegistryDirectory$InvokerDelegate": 返回 DecodeableRpcResult 结果对象
+"RegistryDirectory$InvokerDelegate" -> FailoverClusterInvoker: 返回 DecodeableRpcResult 结果对象
+FailoverClusterInvoker -> MockClusterInvoker: 返回 DecodeableRpcResult 结果对象
+MockClusterInvoker -> InvokerInvocationHandler: 返回 DecodeableRpcResult 结果对象
+InvokerInvocationHandler -> DecodeableRpcResult: recreate() - 提取结果
+DecodeableRpcResult -> InvokerInvocationHandler: 返回结果
+InvokerInvocationHandler -> "$Proxy": 返回结果
+@enduml
