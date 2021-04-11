@@ -1,0 +1,127 @@
+@startuml
+skinparam sequenceMessageAlign center
+APP -> ReferenceConfig: get()
+ReferenceConfig -> ReferenceConfig: init()
+ReferenceConfig -> ReferenceConfig: createProxy()
+ReferenceConfig -> ReferenceConfig: loadRegistries()
+ReferenceConfig -> "Protocol$Adaptive": refer()
+
+"Protocol$Adaptive" -> ProtocolListenerWrapper: refer()
+ProtocolListenerWrapper -> ProtocolFilterWrapper: refer()
+ProtocolFilterWrapper -> QosProtocolWrapper: refer()
+QosProtocolWrapper -> QosProtocolWrapper: startQosServer()
+QosProtocolWrapper -> RegistryProtocol: refer()
+RegistryProtocol -> "RegistryFactory$Adaptive": getRegistry()
+"RegistryFactory$Adaptive" -> RedisRegistryFactory: getRegistry()
+RedisRegistryFactory -> "RegistryFactory$Adaptive": 返回对应的 RedisRegistry 对象
+"RegistryFactory$Adaptive" -> RegistryProtocol: 返回对应的 RedisRegistry 对象
+
+RegistryProtocol -> RegistryProtocol: doRefer()
+RegistryProtocol -> RegistryProtocol: new RegistryDirectory()
+RegistryProtocol -> RegistryProtocol: getRegisteredConsumerUrl()
+RegistryProtocol -> RedisRegistry: register()
+RedisRegistry -> RedisRegistry: doRegister()
+
+RegistryProtocol -> RegistryDirectory: buildRouterChain()
+RegistryDirectory -> RouterChain: buildChain()
+RouterChain -> RouterChain: 获取有效的 RouterFactory 对象列表
+RouterChain -> RouterChain: 根据 RouterFactory 获取 Router 对象列表
+RouterChain -> RegistryDirectory: 返回构造的 RouterChain 对象
+RegistryProtocol -> RegistryDirectory: subscribe()
+RegistryDirectory -> RegistryDirectory: new ReferenceConfigurationListener()
+RegistryDirectory -> RedisRegistry: subscribe()
+RedisRegistry -> RedisRegistry: doSubscribe()
+RedisRegistry -> RedisRegistry: doNotify()
+RedisRegistry -> RedisRegistry: UrlUtils.isMatch(...) 匹配校验
+RedisRegistry -> RedisRegistry: notify()
+RedisRegistry -> FailbackRegistry: doNotify()
+FailbackRegistry -> AbstractRegistry: notify()
+AbstractRegistry -> AbstractRegistry: UrlUtils.isMatch(...) 匹配校验
+AbstractRegistry -> AbstractRegistry: saveProperties()
+AbstractRegistry -> RegistryDirectory: notify()
+RegistryDirectory -> RegistryDirectory: classifyUrls()
+RegistryDirectory -> RegistryDirectory: refreshOverrideAndInvoker()
+RegistryDirectory -> RegistryDirectory: overrideDirectoryUrl()
+RegistryDirectory -> RegistryDirectory: refreshInvoker()
+RegistryDirectory -> RegistryDirectory: toInvokers()
+
+RegistryDirectory -> "Protocol$Adaptive": refer()
+"Protocol$Adaptive" -> ProtocolListenerWrapper: refer()
+ProtocolListenerWrapper -> ProtocolFilterWrapper: refer()
+ProtocolFilterWrapper -> QosProtocolWrapper: refer()
+QosProtocolWrapper -> DubboProtocol: refer()
+DubboProtocol -> DubboProtocol: optimizeSerialization()
+DubboProtocol -> DubboProtocol: getClients()
+DubboProtocol -> DubboProtocol: getSharedClient()
+DubboProtocol -> DubboProtocol: initClient()
+DubboProtocol -> Exchangers: connect()
+Exchangers -> HeaderExchanger: connect()
+HeaderExchanger -> Transporters: connect()
+Transporters -> "Transporter$Adaptive": connect()
+"Transporter$Adaptive" -> NettyTransporter: connect()
+NettyTransporter -> NettyClient: new
+NettyClient -> NettyClient: wrapChannelHandler()
+NettyClient -> ChannelHandlers: wrap()
+ChannelHandlers -> ChannelHandlers: wrapInternal()
+ChannelHandlers -> "Dispatcher$Adaptive": dispatch()
+"Dispatcher$Adaptive" -> AllDispatcher: new AllChannelHandler()
+AllDispatcher -> "ThreadPool$Adaptive": getExecutor()
+"ThreadPool$Adaptive" -> FixedThreadPool: getExecutor()
+FixedThreadPool -> "ThreadPool$Adaptive": 返回 ExecutorService 对象
+"ThreadPool$Adaptive" -> AllDispatcher: 返回 ExecutorService 对象
+AllDispatcher -> SimpleDataStore: put()
+AllDispatcher -> "Dispatcher$Adaptive": 返回构造的 AllChannelHandler 对象
+"Dispatcher$Adaptive" -> ChannelHandlers: 返回构造的 AllChannelHandler 对象
+ChannelHandlers -> ChannelHandlers: new HeartbeatHandler()
+ChannelHandlers -> ChannelHandlers: new MultiMessageHandler()
+ChannelHandlers -> NettyClient: 返回构造的 MultiMessageHandler 对象
+NettyClient -> NettyClient: doOpen()
+NettyClient -> NettyClient: 配置 Bootstrap 相关参数
+NettyClient -> NettyClient: connect()
+NettyClient -> NettyClient: doConnect()
+NettyClient -> SimpleDataStore: get()
+NettyClient -> NettyTransporter: 返回构造的 NettyClient 对象
+NettyTransporter -> "Transporter$Adaptive": 返回构造的 NettyClient 对象
+"Transporter$Adaptive" -> Transporters: 返回构造的 NettyClient 对象
+Transporters -> HeaderExchanger: 返回构造的 NettyClient 对象
+HeaderExchanger -> HeaderExchanger: new HeaderExchangeClient()
+HeaderExchanger -> HeaderExchanger: startHeartbeatTimer()
+HeaderExchanger -> Exchangers: 返回构造的 HeaderExchangeClient( 对象
+Exchangers -> DubboProtocol: 返回构造的 HeaderExchangeClient( 对象
+DubboProtocol -> DubboProtocol: new ReferenceCountExchangeClient()
+DubboProtocol -> DubboProtocol: new DubboInvoker()
+DubboProtocol -> QosProtocolWrapper: 返回构造的 DubboInvoker 对象
+QosProtocolWrapper -> ProtocolFilterWrapper: 返回构造的 DubboInvoker 对象
+ProtocolFilterWrapper -> ProtocolFilterWrapper: buildInvokerChain()
+ProtocolFilterWrapper -> ProtocolListenerWrapper: 返回附带过滤器链的 Invoker 对象
+ProtocolListenerWrapper -> ProtocolListenerWrapper: 获取有效的 InvokerListener 列表
+ProtocolListenerWrapper -> ProtocolListenerWrapper: new ListenerInvokerWrapper()
+ProtocolListenerWrapper -> "Protocol$Adaptive": 返回构造的 ListenerInvokerWrapper 对象
+"Protocol$Adaptive" -> RegistryDirectory: new InvokerDelegate()
+RegistryDirectory -> RouterChain: setInvokers()
+RouterChain -> RouterChain: 遍历每个 Route 执行 notify()
+RegistryDirectory -> RegistryDirectory: destroyUnusedInvokers()
+RegistryDirectory -> RegistryProtocol
+
+
+RegistryProtocol -> "Cluster$Adaptive": join()
+"Cluster$Adaptive" -> MockClusterWrapper: new MockClusterInvoker()
+MockClusterWrapper -> FailoverCluster: new FailoverClusterInvoker()
+FailoverCluster -> MockClusterWrapper: 返回构造的 FailoverClusterInvoker 对象
+MockClusterWrapper -> "Cluster$Adaptive": 返回构造的 MockClusterInvoker 对象
+"Cluster$Adaptive" ->  RegistryProtocol: 返回构造的 MockClusterInvoker 对象
+RegistryProtocol -> QosProtocolWrapper: 返回构造的 MockClusterInvoker 对象
+QosProtocolWrapper -> ProtocolFilterWrapper: 返回构造的 MockClusterInvoker 对象
+ProtocolFilterWrapper -> ProtocolListenerWrapper: 返回构造的 MockClusterInvoker 对象
+ProtocolListenerWrapper -> "Protocol$Adaptive": 返回构造的 MockClusterInvoker 对象
+"Protocol$Adaptive" -> ReferenceConfig: 返回构造的 MockClusterInvoker 对象
+
+ReferenceConfig -> ReferenceConfig: publishConsumer()
+ReferenceConfig -> "ProxyFactory$Adaptive": getProxy()
+"ProxyFactory$Adaptive" -> StubProxyFactoryWrapper: getProxy()
+StubProxyFactoryWrapper -> JdkProxyFactory: getProxy()
+JdkProxyFactory -> JdkProxyFactory: Proxy.newProxyInstance()
+JdkProxyFactory -> StubProxyFactoryWrapper: 返回构造的 Proxy 对象
+StubProxyFactoryWrapper -> "ProxyFactory$Adaptive": 返回构造的 Proxy 对象
+"ProxyFactory$Adaptive" -> ReferenceConfig: 返回构造的 Proxy 对象
+@enduml
