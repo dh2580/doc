@@ -1,0 +1,94 @@
+@startuml
+skinparam sequenceMessageAlign center
+
+APP -> ServiceConfig: export()
+ServiceConfig -> ServiceConfig: doExport() 
+ServiceConfig -> ServiceConfig: doExportUrls()
+ServiceConfig -> ServiceConfig: loadRegistries()
+ServiceConfig -> ServiceConfig: doExportUrlsFor1Protocol()
+ServiceConfig -> "ProxyFactory$Adaptive": getInvoker()
+
+"ProxyFactory$Adaptive" -> StubProxyFactoryWrapper: getInvoker()
+StubProxyFactoryWrapper -> JdkProxyFactory: getInvoker()
+JdkProxyFactory -> ServiceConfig: 返回构造的 Invoker 对象
+
+ServiceConfig -> "Protocol$Adaptive": export()
+
+"Protocol$Adaptive" -> QosProtocolWrapper: export()
+QosProtocolWrapper -> QosProtocolWrapper: startQosServer()
+QosProtocolWrapper -> ProtocolFilterWrapper: export()
+ProtocolFilterWrapper -> ProtocolListenerWrapper: export()
+ProtocolListenerWrapper -> RegistryProtocol: export()
+
+RegistryProtocol -> RegistryProtocol: getRegistryUrl()
+RegistryProtocol -> RegistryProtocol: getProviderUrl()
+RegistryProtocol -> RegistryProtocol: getSubscribedOverrideUrl()
+RegistryProtocol -> RegistryProtocol: new OverrideListener()
+RegistryProtocol -> RegistryProtocol: doLocalExport()
+RegistryProtocol -> "Protocol$Adaptive": export()
+
+"Protocol$Adaptive" -> QosProtocolWrapper: export()
+QosProtocolWrapper -> ProtocolFilterWrapper: export()
+ProtocolFilterWrapper -> ProtocolFilterWrapper: buildInvokerChain()
+ProtocolFilterWrapper -> ProtocolListenerWrapper: export()
+ProtocolListenerWrapper -> DubboProtocol: export()
+DubboProtocol -> DubboProtocol: openServer(()
+DubboProtocol -> DubboProtocol: createServer()
+DubboProtocol -> Exchangers: bind()
+
+Exchangers -> HeaderExchanger: bind()
+HeaderExchanger -> Transporters: bind()
+Transporters -> "Transporter$Adaptive": bind()
+"Transporter$Adaptive" -> NettyTransporter: bind()
+NettyTransporter -> NettyServer: new
+NettyServer -> ChannelHandlers: wrap()
+ChannelHandlers -> ChannelHandlers: wrapInternal()
+ChannelHandlers -> "Dispatcher$Adaptive": dispatch()
+"Dispatcher$Adaptive" -> AllDispatcher: dispatch()
+AllDispatcher -> AllChannelHandler: new
+AllChannelHandler -> WrappedChannelHandler: new
+WrappedChannelHandler -> "ThreadPool$Adaptive": getExecutor()
+"ThreadPool$Adaptive" -> FixedThreadPool: getExecutor()
+FixedThreadPool -> WrappedChannelHandler: 返回构造的 ExecutorService 对象
+WrappedChannelHandler -> SimpleDataStore: put()
+
+AllDispatcher -> "Dispatcher$Adaptive": 返回构造的 AllChannelHandler 对象
+"Dispatcher$Adaptive" -> ChannelHandlers: 返回构造的 AllChannelHandler 对象
+ChannelHandlers -> ChannelHandlers: new HeartbeatHandler()
+ChannelHandlers -> ChannelHandlers: new MultiMessageHandler()
+ChannelHandlers -> NettyServer: 返回构造的 MultiMessageHandler 对象
+
+NettyServer -> NettyServer: doOpen()
+NettyServer -> NettyServer: new NettyServerHandler()
+NettyServer -> NettyServer: 启动 ServerBootstrap
+NettyServer -> SimpleDataStore: get()
+NettyServer -> NettyTransporter: 返回构造的 NettyServer 对象
+NettyTransporter -> "Transporter$Adaptive": 返回构造的 NettyServer 对象
+"Transporter$Adaptive" -> Transporters: 返回构造的 NettyServer 对象
+Transporters -> HeaderExchanger: 返回构造的 NettyServer 对象
+HeaderExchanger -> HeaderExchangeServer: new
+HeaderExchangeServer -> HeaderExchangeServer: startHeartbeatTimer()
+HeaderExchanger -> Exchangers: 返回构造额 HeaderExchangeServer 对象
+Exchangers -> DubboProtocol: 返回构造的 HeaderExchangeServer 对象
+DubboProtocol -> DubboProtocol: optimizeSerialization()
+
+DubboProtocol -> ProtocolListenerWrapper: 返回构造的 Invoker 对象
+ProtocolListenerWrapper -> ProtocolListenerWrapper: 获取有效的 ExporterListener 列表
+ProtocolListenerWrapper -> ProtocolListenerWrapper: new ListenerExporterWrapper()
+ProtocolListenerWrapper -> ProtocolFilterWrapper: 返回构造的 ListenerExporterWrapper 对象
+ProtocolFilterWrapper -> QosProtocolWrapper: 返回构造的 ListenerExporterWrapper 对象
+QosProtocolWrapper -> "Protocol$Adaptive": 返回构造的 ListenerExporterWrapper 对象
+"Protocol$Adaptive" -> RegistryProtocol: 返回构造的 ListenerExporterWrapper 对象
+
+RegistryProtocol -> RegistryProtocol: new RegistryProtocol$ExporterChangeableWrapper()
+RegistryProtocol -> RegistryProtocol: register()
+RegistryProtocol -> RedisRegistry: register()
+RegistryProtocol -> RedisRegistry: subscribe()
+RegistryProtocol -> RegistryProtocol: new RegistryProtocol$DestroyableExporter()
+RegistryProtocol -> ProtocolListenerWrapper: 返回构造的 RegistryProtocol$DestroyableExporter 对象
+ProtocolListenerWrapper -> ProtocolFilterWrapper: 返回构造的 RegistryProtocol$DestroyableExporter 对象
+ProtocolFilterWrapper -> QosProtocolWrapper: 返回构造的 RegistryProtocol$DestroyableExporter 对象
+QosProtocolWrapper -> "Protocol$Adaptive": 返回构造的 RegistryProtocol$DestroyableExporter 对象
+"Protocol$Adaptive" -> ServiceConfig: 返回构造的 RegistryProtocol$DestroyableExporter 对象
+ServiceConfig -> MetadataReportService: publishProvider()
+@enduml
