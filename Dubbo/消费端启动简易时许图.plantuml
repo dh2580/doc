@@ -96,8 +96,8 @@ ProtocolFilterWrapper -> ProtocolFilterWrapper: buildInvokerChain()
 ProtocolFilterWrapper -> ProtocolListenerWrapper: 返回附带过滤器链的 Invoker 对象
 ProtocolListenerWrapper -> ProtocolListenerWrapper: 获取有效的 InvokerListener 列表
 ProtocolListenerWrapper -> ProtocolListenerWrapper: new ListenerInvokerWrapper()
-ProtocolListenerWrapper -> "Protocol$Adaptive": 返回构造的 ListenerInvokerWrapper 对象
-"Protocol$Adaptive" -> RegistryDirectory: new InvokerDelegate()
+ProtocolListenerWrapper -> RegistryDirectory: 返回构造的 ListenerInvokerWrapper 对象
+RegistryDirectory -> RegistryDirectory: new InvokerDelegate()
 RegistryDirectory -> RouterChain: setInvokers()
 RouterChain -> RouterChain: 遍历每个 Route 执行 notify()
 RegistryDirectory -> RegistryDirectory: destroyUnusedInvokers()
