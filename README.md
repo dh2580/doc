@@ -69,3 +69,5 @@
 + [分布式一致性协议与Zookeeper实现](./Zookeeper/Zookeeper知识点.MD)
 
 + [分布式一致性协议之Raft](./Raft/分布式一致性协议之Raft.MD)
+
++ [分布式一致性协议之Gossip](./Gossip/分户式一致性协议之Gossip.MD)
