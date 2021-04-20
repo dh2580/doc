@@ -58,15 +58,13 @@
 
 + [布隆过滤器](./布隆过滤器.MD)
 
++ [服务端安全之如何防止接口盗刷](./架构设计/【防盗刷】如何防止接口盗刷.MD)
+
++ [Hystrix工作流程](./微服务/Hystrix工作流程.png) ｜ [HystrixCircuitBreaker原理](./微服务/HystrixCircuitBreaker原理.png)
+
 + [限速器之Guava RateLimiter实现原理浅析](./常用书签/Blog/限速器之Guava%20RateLimiter.MD)
 
-+ [Hystrix工作流程](./微服务/Hystrix工作流程.png)
-
-+ [HystrixCircuitBreaker原理](./微服务/HystrixCircuitBreaker原理.png)
-
 + [网关之Zuul1实现原理分析](./Zuul/网关之Zuul1实现原理分析.MD)
-
-+ [服务端安全之如何防止接口盗刷](./架构设计/【防盗刷】如何防止接口盗刷.MD)
 
 + [分布式一致性协议与Zookeeper实现](./Zookeeper/Zookeeper知识点.MD)
 
