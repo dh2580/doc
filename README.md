@@ -64,6 +64,8 @@
 
 + [HystrixCircuitBreaker原理](./微服务/HystrixCircuitBreaker原理.png)
 
++ [网关之Zuul1实现原理分析](./Zuul/网关之Zuul1实现原理分析.MD)
+
 + [服务端安全之如何防止接口盗刷](./架构设计/【防盗刷】如何防止接口盗刷.MD)
 
 + [分布式一致性协议与Zookeeper实现](./Zookeeper/Zookeeper知识点.MD)
