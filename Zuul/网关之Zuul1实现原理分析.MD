@@ -80,7 +80,7 @@ private void registerHandlers() {
     }
 }
 ```
-这里以`Route`对象的`fullPath`字段为`key`，`ZuulController`为`value`存入到路径->处理映射中，`Route`对象的定义如下所示，所有的字段值均来自我们在`application.properties`中定义的配置。*（两者并不完全等同，因为`application.properties`中的配置对应于`ZuulProperties`对象，到`Route`对象中有一些转换操作）*
+这里以`Route`对象的`fullPath`字段为`key`，`ZuulController`为`value`存入到路径->处理映射中，`Route`对象的定义如下所示，所有的字段值均来自我们在`application.properties`中定义的配置。*（两者并不完全等同，因为`application.properties`中的配置对应于`ZuulProperties`对象，到`Route`对象中间有一些转换操作）*
 
 ![Route](./Route.jpg)
 
