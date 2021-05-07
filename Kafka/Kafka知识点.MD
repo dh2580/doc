@@ -710,7 +710,7 @@ void abortTransaction()
     >
     > `Broker`计算出对应的`TransactionCoordinator`后，将`TransactionCoordinator`所在节点的`brokerId`、`IP`、`port`包装在`FindCoordinatorResponse`响应对象发送给`producer`
 
-+ 向`TransactionCoordinator`获取`producer id`、`producer epoch`，事务协调器在`__transaction_state`主题中存储一条关于该`transactional.id`的事务消息
++ 向`TransactionCoordinator`获取**PID**(`producer id`)、`producer epoch`，事务协调器在`__transaction_state`主题中存储一条关于该`transactional.id`的事务消息
 
 + 开启事务，执行相关操作，将事务涉及到的相关主题分区包装在事务消息中的`transaction_partitions`结构中，发送新的事务消息到`__transaction_state`（`__transaction_state`采用的压缩策略，不是删除策略，所以旧的事务消息会被新的事务消息覆盖掉）
 
